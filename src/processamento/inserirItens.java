@@ -60,12 +60,9 @@ public class inserirItens {
 		PreparedStatement  consultaValidando = jdbcWrapper.getPreparedStatement(consultaDados);
 		ResultSet consulta = consultaValidando.executeQuery();
 		BigDecimal valor = new BigDecimal(0);
-		while(consulta.next()){
-			
-			valor = (consulta.getBigDecimal("CUSGER") == null) ? BigDecimal.ZERO : consulta.getBigDecimal("CUSGER");
-			
-		}
-		
+
+		while(consulta.next()) valor = (consulta.getBigDecimal("CUSGER") == null) ? BigDecimal.ZERO : consulta.getBigDecimal("CUSGER");
+
 		if(!(valor.intValue() > 0) && !isServico) {
 			
 			throw new PersistenceException("Custo do produto obrigatório, não encontrado ou está zerado o custo, no cadastro de custo "+consultaDados);
@@ -87,15 +84,13 @@ public class inserirItens {
 				
 				
 		}else {
-				update = "UPDATE  AD_ITENSLICITACAO SET  REPLICANDO=0 "
-					+ "where CODITELIC="+codIteLic+" and CODLIC="+codLic;
+				update = "UPDATE AD_ITENSLICITACAO SET REPLICANDO=0 "
+						+ "WHERE CODITELIC="+codIteLic+" AND CODLIC="+codLic;
 		}
 		PreparedStatement  updateValidando = jdbcWrapper.getPreparedStatement(update);
   		updateValidando.executeUpdate();
-  		
-		
-		
-  		String consultaCabecalho = "select codemp,nunota,codlic from ad_licitacao where codlic="+codLic;
+
+  		String consultaCabecalho = "select CODEMP, NUNOTA, CODLIC from AD_LICITACAO where CODLIC="+codLic;
 		PreparedStatement  consultaValidando2 = jdbcWrapper.getPreparedStatement(consultaCabecalho);
 		ResultSet consultaCabecalho2 = consultaValidando2.executeQuery();
 

@@ -7,7 +7,6 @@ import java.util.Map;
 import br.com.sankhya.extensions.actionbutton.AcaoRotinaJava;
 import br.com.sankhya.extensions.actionbutton.ContextoAcao;
 import br.com.sankhya.extensions.actionbutton.Registro;
-import br.com.sankhya.jape.core.JapeSession.SessionHandle;
 import br.com.sankhya.modelcore.auth.AuthenticationInfo;
 import br.com.sankhya.modelcore.comercial.BarramentoRegra;
 import br.com.sankhya.modelcore.comercial.ConfirmacaoNotaHelper;
@@ -25,29 +24,29 @@ public class confirmarNota implements AcaoRotinaJava {
 		String nuNota = "";
 		//EntityFacade dwf = EntityFacadeFactory.getDWFFacade();
 	/*	JdbcWrapper jdbcWrapper = dwf.getJdbcWrapper();
-		jdbcWrapper.openSession();*/
-		SessionHandle hnd = null;
+		jdbcWrapper.openSession();
+		SessionHandle hnd = null;*/
 		String chave = "";
-		for (int i = 0; i < linhas.length; i++) {
-			
-			nuNota += linhas[i].getCampo("NUNOTA");
+		for (Registro linha : linhas) {
+
+			nuNota += linha.getCampo("NUNOTA");
 
 			Collection<BigDecimal> numNota = new ArrayList<>();
 			Map<BigDecimal, BigDecimal> mapas = null;
 			numNota.add(new BigDecimal(nuNota));
-			
-				BarramentoRegra regra = BarramentoRegra.build(CACHelper.class, "regrasConfirmacaoCAC.xml", AuthenticationInfo.getCurrent());
-				ConfirmacaoNotaHelper.confirmarNota(new BigDecimal(nuNota), regra, true);
-				ConfiguracaoFaturamento fat = new ConfiguracaoFaturamento();
-				fat.setFaturamentoNormal(true);
-				fat.setCodTipOper(new BigDecimal("1007"));
-				
-				ServiceContext textoNovo = ServiceContext.getCurrent();
-				chave = textoNovo.getHttpSessionId();
-				//hnd = JapeSession.getCurrentSession().getTopMostHandle();
-				//FaturamentoHelper.faturar(textoNovo, hnd, fat, numNota, mapas);
-				//JapeSession.close(hnd);
-				
+
+			BarramentoRegra regra = BarramentoRegra.build(CACHelper.class, "regrasConfirmacaoCAC.xml", AuthenticationInfo.getCurrent());
+			ConfirmacaoNotaHelper.confirmarNota(new BigDecimal(nuNota), regra, true);
+			ConfiguracaoFaturamento fat = new ConfiguracaoFaturamento();
+			fat.setFaturamentoNormal(true);
+			fat.setCodTipOper(new BigDecimal("1007"));
+
+			ServiceContext textoNovo = ServiceContext.getCurrent();
+			chave = textoNovo.getHttpSessionId();
+			//hnd = JapeSession.getCurrentSession().getTopMostHandle();
+			//FaturamentoHelper.faturar(textoNovo, hnd, fat, numNota, mapas);
+			//JapeSession.close(hnd);
+
 		}
 		arg0.setMensagemRetorno("Licita��o Aprovada !"+chave);
 		

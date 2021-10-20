@@ -2,6 +2,7 @@ package save;
 
 import java.math.BigDecimal;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -11,6 +12,8 @@ import br.com.sankhya.jape.EntityFacade;
 import br.com.sankhya.jape.dao.JdbcWrapper;
 import br.com.sankhya.jape.vo.DynamicVO;
 import br.com.sankhya.jape.vo.EntityVO;
+import br.com.sankhya.modelcore.util.EntityFacadeFactory;
+import processamento.Acessorios;
 
 public class salvarDados {
 
@@ -75,16 +78,18 @@ public class salvarDados {
          itemVO.setProperty("AD_CODLIC", codLic);
          itemVO.setProperty("USOPROD", "V");
          itemVO.setProperty("RESERVA", "N");
-         //if(tipo.equalsIgnoreCase("F")) {
+		 itemVO.setProperty("ATUALESTOQUE", new BigDecimal(0));
+		//if(tipo.equalsIgnoreCase("F")) {
          //itemVO.setProperty("STATUSNOTA", "L");
          //}
-         itemVO.setProperty("ATUALESTOQUE", new BigDecimal(0));
          //itemVO.setProperty("CODLOCALORIG", codLocal);
          dwf.createEntity("ItemNota", (EntityVO)itemVO);
          
     }
     
-    public static void insertComponentes(BigDecimal codLic,JdbcWrapper jdbcWrapper) throws Exception {
+    public static void insertComponentes(BigDecimal codLic,JdbcWrapper jdbc) throws Exception {
+
+
     	
     	String insertSql = "insert into AD_LICITACAOCOMPONENTES(CODLICCOM,CODLIC,CODPROD,QTDNEG,CODVOL,CUSTO,MARKUPFATOR,VLRUNIT)\r\n"
     			+ "  (select rownum,CODLIC,CODMATPRIMA,QTDNEG,CODVOL,CUSTOMATERIAPRIMA,MARKUPFATOR,VLRUNIT from (\r\n"
@@ -99,17 +104,40 @@ public class salvarDados {
     			+ "    			    AD_ITENSLICITACAO ON AD_ITENSLICITACAO.CODPROD = TGFICP.CODPROD\r\n"
     			+ "    			    WHERE CODLIC="+codLic+"\r\n"
     			+ "    			  )A\r\n"
-    			+ "    			    group by CODLIC,CODMATPRIMA,CODVOL,MARKUPFATOR,vlrunit,CUSTOMATERIAPRIMA   order by CODMATPRIMA asc)a)";
+    			+ "    			    group by CODLIC,CODMATPRIMA,CODVOL,MARKUPFATOR,vlrunit,CUSTOMATERIAPRIMA order by CODMATPRIMA asc)a)";
 
-    	String deleteSql = "delete from AD_LICITACAOCOMPONENTES where codlic="+codLic;
-    	
-    	PreparedStatement  deleteSql1 = jdbcWrapper.getPreparedStatement(deleteSql);
-    	deleteSql1.executeUpdate();
-  		
-    	PreparedStatement  updateValidando = jdbcWrapper.getPreparedStatement(insertSql);
-  		updateValidando.executeUpdate();
+		// Execute DELETE on AD_LICITACAOCOMPONENTES
+    	PreparedStatement deleteComponentes = jdbc.getPreparedStatement("DELETE FROM AD_LICITACAOCOMPONENTES WHERE CODLIC = "+codLic);
+		deleteComponentes.executeUpdate();
+		// Execute DELETE on TGFITE
+		PreparedStatement deleteItemComponentes = jdbc.getPreparedStatement("DELETE FROM TGFITE WHERE AD_CODLIC = "+codLic+" AND AD_CODLICCOM IS NOT NULL");
+		deleteItemComponentes.executeUpdate();
+		// Execute INSERT on AD_LICITACAOCOMPONENTES
+    	PreparedStatement insert = jdbc.getPreparedStatement(insertSql);
+  		insert.executeUpdate();
+
+		String sql = "select LIC.NUNOTA, LIC.CODEMP, COMP.* from AD_LICITACAOCOMPONENTES COMP INNER JOIN AD_LICITACAO LIC ON COMP.CODLIC = LIC.CODLIC where LIC.CODLIC="+codLic;
+		PreparedStatement consultaLic = jdbc.getPreparedStatement(sql);
+		ResultSet componente = consultaLic.executeQuery();
+
+		while (componente.next()) {
+			BigDecimal codLicCom = componente.getBigDecimal("CODLICCOM");
+			BigDecimal nuNota = componente.getBigDecimal("NUNOTA");
+			BigDecimal codEmp = componente.getBigDecimal("CODEMP");
+			BigDecimal codProd = componente.getBigDecimal("CODPROD");
+			BigDecimal qtdNeg = componente.getBigDecimal("QTDNEG");
+			String codVol = componente.getString("CODVOL");
+			BigDecimal vlrUnit = componente.getBigDecimal("VLRUNIT");
+			BigDecimal vlrTot = vlrUnit.multiply(qtdNeg);
+			BigDecimal markupFator = componente.getBigDecimal("MARKUPFATOR");
+			if(!(markupFator.doubleValue()>0)) markupFator = BigDecimal.ONE;
+			if(!(qtdNeg.doubleValue()>0)) qtdNeg = BigDecimal.ONE;
+
+			Acessorios.salvarAcessoriosDados(nuNota,codProd,qtdNeg,codVol,vlrUnit,vlrTot,codEmp,codLicCom,codLic);
+
+		}
+		jdbc.closeSession();
     }
-
 
 
     public static void salvarItensDados(
@@ -120,8 +148,7 @@ public class salvarDados {
     		String codVol, 
     		BigDecimal vlrUnit, 
     		BigDecimal custo) throws Exception {
-    	
-    	
+
     	 DynamicVO itemVO = (DynamicVO)dwf.getDefaultValueObjectInstance("AD_ITENSLICITACAO");
          itemVO.setProperty("CODLIC", codLic);
          itemVO.setProperty("CODPROD", codProd);
@@ -133,25 +160,7 @@ public class salvarDados {
          
     }
 
-	public static void salvarAcessoriosDados(
-			EntityFacade dwf,
-			BigDecimal codLic,
-			BigDecimal codProd,
-			BigDecimal qtdNeg,
-			String codVol,
-			BigDecimal vlrUnit,
-			BigDecimal custo) throws Exception {
 
-		DynamicVO itemVO = (DynamicVO)dwf.getDefaultValueObjectInstance("AD_LICITACAOCOMPONENTES");
-		itemVO.setProperty("CODLIC", codLic);
-		itemVO.setProperty("CODPROD", codProd);
-		itemVO.setProperty("QTDNEG", qtdNeg);
-		itemVO.setProperty("CUSTO", custo);
-		itemVO.setProperty("CODVOL", codVol);
-		itemVO.setProperty("VLRUNIT", vlrUnit);
-		dwf.createEntity("ItemNota", (EntityVO)itemVO);
-
-	}
     
     public static void salvarDadosCabecalho(
     		EntityFacade dwf,

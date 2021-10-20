@@ -19,34 +19,31 @@ public class recalculoComponentes implements AcaoRotinaJava {
 	@Override
 	public void doAction(ContextoAcao arg0) throws Exception {
 		EntityFacade dwf = EntityFacadeFactory.getDWFFacade();
-		JdbcWrapper jdbcWrapper = dwf.getJdbcWrapper();
-		jdbcWrapper.openSession();
+		JdbcWrapper jdbc = dwf.getJdbcWrapper();
+		jdbc.openSession();
 		
 		Registro[] registros = arg0.getLinhas();
-		Integer usuario = Integer.parseInt(""+arg0.getUsuarioLogado());
+		int usuario = Integer.parseInt(""+arg0.getUsuarioLogado());
+		BigDecimal codLic = (BigDecimal) registros[0].getCampo("CODLIC");
 
-		for (Registro registro : registros) {
+		String sql = "select * from ad_licitacao  where codlic=" + codLic;
+		PreparedStatement consulta = jdbc.getPreparedStatement(sql);
+		ResultSet rset = consulta.executeQuery();
 
-			BigDecimal CODLIC = (BigDecimal) registro.getCampo("CODLIC");
+		while (rset.next()) {
 
-			String sql = "select codemp,nunota,codlic from ad_licitacao  where codlic=" + CODLIC;
-			PreparedStatement consulta = jdbcWrapper.getPreparedStatement(sql);
-			ResultSet rset = consulta.executeQuery();
-
-			while (rset.next()) {
-
-				BigDecimal nuNota = rset.getBigDecimal("NUNOTA");
-				BigDecimal codEmp = rset.getBigDecimal("CODEMP");
-
-				ImpostosHelpper impostos = new ImpostosHelpper();
-				impostos.setForcarRecalculo(true);
-				impostos.calcularImpostos(nuNota);
-			}
-
-			salvarDados.insertComponentes(CODLIC, jdbcWrapper);
-
+			BigDecimal nuNota = rset.getBigDecimal("NUNOTA");
+			BigDecimal codEmp = rset.getBigDecimal("CODEMP");
+			ImpostosHelpper impostos = new ImpostosHelpper();
+			impostos.setForcarRecalculo(true);
+			impostos.calcularImpostos(nuNota);
 		}
-		jdbcWrapper.openSession();
+
+		salvarDados.insertComponentes(codLic, jdbc);
+
+		jdbc.closeSession();
+
+
 		arg0.setMensagemRetorno("Recalculado com sucesso");
 	}
 

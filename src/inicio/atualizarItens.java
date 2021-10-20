@@ -50,16 +50,15 @@ public class atualizarItens implements EventoProgramavelJava {
   	    	String AD_NRREGISTRO = rset.getString("AD_NRREGISTRO");
   	    	
   	    	String update = "UPDATE AD_ITENSLICITACAO SET "
-  	    			+ " DESCRITIVO_PRODUTO='"+AD_DESCRITIVO+"',"
-  	    					+ "PROCEDENCIA='"+AD_PROCEDENCIA+"',"
-  	    							+ " MARCA='"+MARCA+"',ANVISA='"+AD_NRREGISTRO+"' WHERE CODITELIC="+codIteLic+" AND "
-  	    									+ " CODLIC="+codLic;
-  	    	
+							+ " DESCRITIVO_PRODUTO='"+AD_DESCRITIVO+"',"
+							+ "PROCEDENCIA='"+AD_PROCEDENCIA+"',"
+							+ " MARCA='"+MARCA+"',ANVISA='"+AD_NRREGISTRO+"' WHERE CODITELIC="+codIteLic+" AND "
+							+ " CODLIC="+codLic;
+
   			PreparedStatement updateValidando1 = jdbc.getPreparedStatement(update);
   	  		updateValidando1.executeUpdate();
 
-				jdbc.closeSession();
-  	  		
+			jdbc.closeSession();
   	    }
 
 	}

@@ -90,7 +90,7 @@ public class atualizarItens4 {
 				
 		}
 		
-  		salvarDados.insertComponentes(codLic,  jdbcWrapper);
+  		salvarDados.insertComponentes(codLic, jdbcWrapper);
   		
 		jdbcWrapper.closeSession();
 	}

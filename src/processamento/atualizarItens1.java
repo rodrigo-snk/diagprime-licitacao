@@ -14,8 +14,7 @@ import br.com.sankhya.modelcore.util.EntityFacadeFactory;
 import save.salvarDados;
 
 public class atualizarItens1 {
-	
-	
+
 	
 	public static void atualizarCustoVolume(PersistenceEvent arg0) throws Exception {
 		
@@ -100,7 +99,7 @@ public class atualizarItens1 {
 				
 		}
 		
-  		salvarDados.insertComponentes(codLic,  jdbcWrapper);
+  		salvarDados.insertComponentes(codLic, jdbcWrapper);
   		
   		
 		jdbcWrapper.closeSession();
