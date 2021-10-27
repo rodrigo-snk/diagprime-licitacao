@@ -38,49 +38,35 @@ public class atualizarItens implements EventoProgramavelJava {
 		BigDecimal codIteLic = dados.asBigDecimalOrZero("CODITELIC");
 		BigDecimal codLic = dados.asBigDecimalOrZero("CODLIC");
 		BigDecimal codProd = dados.asBigDecimalOrZero("CODPROD");
-		String sql = consultasDados.retornaDadosItensProdutos(codProd+"");
-		PreparedStatement updateValidando = jdbc.getPreparedStatement(sql);
-  		ResultSet rset = updateValidando.executeQuery();
+		final String sql = consultasDados.retornaDadosItensProdutos(codProd.toString());
+		PreparedStatement ps = jdbc.getPreparedStatement(sql);
+  		ResultSet rs = ps.executeQuery();
 			 
-  	    while(rset.next()) {
+  	    while(rs.next()) {
   	    	
-  	    	String AD_DESCRITIVO = rset.getString("AD_DESCRITIVO");
-  	    	String AD_PROCEDENCIA = rset.getString("AD_PROCEDENCIA");
-  	    	String MARCA = rset.getString("MARCA");
-  	    	String AD_NRREGISTRO = rset.getString("AD_NRREGISTRO");
+  	    	final String AD_DESCRITIVO = rs.getString("AD_DESCRITIVO");
+			final String AD_PROCEDENCIA = rs.getString("AD_PROCEDENCIA");
+			final String MARCA = rs.getString("MARCA");
+			final String AD_NRREGISTRO = rs.getString("AD_NRREGISTRO");
   	    	
-  	    	String update = "UPDATE AD_ITENSLICITACAO SET "
+  	    	final String updateItens = "UPDATE AD_ITENSLICITACAO SET "
 							+ " DESCRITIVO_PRODUTO='"+AD_DESCRITIVO+"',"
 							+ "PROCEDENCIA='"+AD_PROCEDENCIA+"',"
 							+ " MARCA='"+MARCA+"',ANVISA='"+AD_NRREGISTRO+"' WHERE CODITELIC="+codIteLic+" AND "
 							+ " CODLIC="+codLic;
+  			ps = jdbc.getPreparedStatement(updateItens);
+  	  		ps.executeUpdate();
 
-  			PreparedStatement updateValidando1 = jdbc.getPreparedStatement(update);
-  	  		updateValidando1.executeUpdate();
 
+		}
 			jdbc.closeSession();
-  	    }
 
 	}
 
 	@Override
 	public void afterUpdate(PersistenceEvent arg0) throws Exception {
 		// TODO Auto-generated method stub
-		if (arg0.getModifingFields().isModifing("UNID")) {
-			atualizarItens1.atualizarCustoVolume(arg0);
-		}
-		
-		if (arg0.getModifingFields().isModifing("CUSTO") || arg0.getModifingFields().isModifing("MARKUPFATOR")) {
-			atualizarItens2.atualizarCustoProduto(arg0);
-		}
-		
-		if (arg0.getModifingFields().isModifing("QTDE")) {
-			atualizarItens2.atualizarCustoProduto(arg0);
-		}
-		
-		if (arg0.getModifingFields().isModifing("VLRUNIT")) {
-			atualizarItens4.atualizarCustoProduto(arg0);
-		}
+
 
 	}
 
@@ -104,7 +90,21 @@ public class atualizarItens implements EventoProgramavelJava {
 
 	@Override
 	public void beforeUpdate(PersistenceEvent arg0) throws Exception {
-		// TODO Auto-generated method stub
+		if (arg0.getModifingFields().isModifing("UNID")) {
+			atualizarItens1.atualizarCustoVolume(arg0);
+		}
+
+		if (arg0.getModifingFields().isModifing("CUSTO") || arg0.getModifingFields().isModifing("MARKUPFATOR")) {
+			atualizarItens2.atualizarCustoProduto(arg0);
+		}
+
+		if (arg0.getModifingFields().isModifing("QTDE")) {
+			atualizarItens2.atualizarCustoProduto(arg0);
+		}
+
+		if (arg0.getModifingFields().isModifing("VLRUNIT")) {
+			atualizarItens4.atualizarCustoProduto(arg0);
+		}
 
 		
 		

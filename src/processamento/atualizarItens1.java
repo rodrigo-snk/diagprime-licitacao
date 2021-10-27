@@ -29,7 +29,6 @@ public class atualizarItens1 {
 		BigDecimal codIteLic = (dados.asBigDecimalOrZero("CODITELIC"));
 		BigDecimal codProd = (dados.asBigDecimalOrZero("CODPROD"));
 		BigDecimal qtdNeg = (dados.asBigDecimalOrZero("QTDE"));
-		BigDecimal vlrTot = (dados.asBigDecimalOrZero("VLRTOTAL"));
 		BigDecimal vlrUnit = (dados.asBigDecimalOrZero("VLRUNIT"));
 		BigDecimal markupFator = (dados.asBigDecimalOrZero("MARKUPFATOR"));
 		String codVol = (dados.asString("UNID"));
@@ -68,11 +67,10 @@ public class atualizarItens1 {
 			}
 			
 		}
-		
-		
-		vlrTot = (valor.multiply(markupFator)).multiply(qtdNeg);
-		vlrUnit = (valor.multiply(markupFator));
-		
+
+		vlrUnit = valor.multiply(markupFator);
+		BigDecimal vlrTot = valor.multiply(markupFator).multiply(qtdNeg);
+
 		String update = "UPDATE AD_ITENSLICITACAO SET CUSTO="+valor+",VLRTOTAL="+vlrTot+",VLRUNIT="+vlrUnit+" "
 				+ "where CODITELIC="+codIteLic+"  and CODLIC="+codLic;
 		PreparedStatement  updateValidando = jdbcWrapper.getPreparedStatement(update);

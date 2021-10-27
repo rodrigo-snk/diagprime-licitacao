@@ -46,6 +46,19 @@ public class Acessorios {
         jdbcWrapper.closeSession();
     }
 
+    /**
+     * Adiciona os acessórios na ItemNota (TGFITE)
+     * @param nuNota Nro. Único Nota
+     * @param codProd Cód. Produto
+     * @param qtdNeg Quantidade
+     * @param codVol Unidade de Volume
+     * @param vlrUnit Vlr. Unitário
+     * @param vlrTot Vlr. Total
+     * @param codEmp Empresa
+     * @param codLicCom Cód. Componente Licitação
+     * @param codLic Cód. Licitação
+     * @throws Exception
+     */
     public static void salvarAcessoriosDados(
             BigDecimal nuNota,
             BigDecimal codProd,
@@ -72,9 +85,9 @@ public class Acessorios {
         itemVO.setProperty("AD_CODLICCOM", codLicCom);
         itemVO.setProperty("AD_CODLIC", codLic);
         itemVO.setProperty("AD_ACESSORIOS", "S");
-        itemVO.setProperty("USOPROD", "V");
+        itemVO.setProperty("USOPROD", "D");
         itemVO.setProperty("RESERVA", "N");
-        itemVO.setProperty("ATUALESTOQUE", new BigDecimal(0));
+        itemVO.setProperty("ATUALESTOQUE", BigDecimal.ZERO);
         dwfFacade.createEntity("ItemNota", (EntityVO)itemVO);
 
         jdbc.closeSession();

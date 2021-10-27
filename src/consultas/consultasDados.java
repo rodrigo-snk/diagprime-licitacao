@@ -57,13 +57,7 @@ public class consultasDados {
 
 	public static String retornaDadosItensProdutos(String codProd) {
 
-		return "select \r\n"
-				+ "	AD_DESCRITIVO,\r\n"
-				+ "	AD_PROCEDENCIA,\r\n"
-				+ "	MARCA,\r\n"
-				+ "	AD_NRREGISTRO\r\n"
-				+ "	USOPROD\r\n"
-				+ "	from tgfpro where CODPROD="+codProd;
+		return "select * from tgfpro where CODPROD="+codProd;
 	}
 
 

@@ -35,7 +35,6 @@ public class recalculoCustoAction implements AcaoRotinaJava {
 					VLRUNIT,
 					MARKUPFATOR,
 					CODVOL);
-
 		}
 		arg0.setMensagemRetorno("Recalculado com sucesso");
 	}

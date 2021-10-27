@@ -14,38 +14,28 @@ import br.com.sankhya.modelcore.util.EntityFacadeFactory;
 import save.salvarDados;
 
 public class atualizarItens2 {
-	
-	
-	
+
 	public static void atualizarCustoProduto(PersistenceEvent arg0) throws Exception {
-		
-		
+
 		EntityFacade dwf = EntityFacadeFactory.getDWFFacade();
 		JdbcWrapper jdbcWrapper = dwf.getJdbcWrapper();
 		jdbcWrapper.openSession();
+
+		DynamicVO itemVO = (DynamicVO) arg0.getVo();
+		BigDecimal codLic = (itemVO.asBigDecimalOrZero("CODLIC"));
+		BigDecimal codIteLic = (itemVO.asBigDecimalOrZero("CODITELIC"));
+		BigDecimal codProd = (itemVO.asBigDecimalOrZero("CODPROD"));
+		BigDecimal qtdNeg = (itemVO.asBigDecimalOrZero("QTDE"));
+		BigDecimal custo = (itemVO.asBigDecimalOrZero("CUSTO"));
+		BigDecimal markupFator = (itemVO.asBigDecimalOrZero("MARKUPFATOR"));
+		String codVol = (itemVO.asString("UNID"));
 		
+		if(!(markupFator.doubleValue()>0)) markupFator = BigDecimal.ONE;
+		if(!(qtdNeg.doubleValue()>0)) qtdNeg = BigDecimal.ONE;
+
 		
-		DynamicVO dados = (DynamicVO) arg0.getVo();
-		BigDecimal codLic = (dados.asBigDecimalOrZero("CODLIC"));
-		BigDecimal codIteLic = (dados.asBigDecimalOrZero("CODITELIC"));
-		BigDecimal codProd = (dados.asBigDecimalOrZero("CODPROD"));
-		BigDecimal qtdNeg = (dados.asBigDecimalOrZero("QTDE"));
-		BigDecimal custo = (dados.asBigDecimalOrZero("CUSTO"));
-		BigDecimal vlrTot = (dados.asBigDecimalOrZero("VLRTOTAL"));
-		BigDecimal vlrUnit = (dados.asBigDecimalOrZero("VLRUNIT"));
-		BigDecimal markupFator = (dados.asBigDecimalOrZero("MARKUPFATOR"));
-		String codVol = (dados.asString("UNID"));
-		
-		if(!(markupFator.doubleValue()>0)) {
-			markupFator = BigDecimal.ONE;
-		}
-		
-		if(!(qtdNeg.doubleValue()>0)) {
-			qtdNeg = BigDecimal.ONE;
-		}
-		
-        BigDecimal valor = custo;
-        BigDecimal quantidade = BigDecimal.ZERO;
+        	BigDecimal valor = custo;
+
 			String sqlunidade = "SELECT DIVIDEMULTIPLICA,QUANTIDADE FROM TGFVOA WHERE CODPROD = "+codProd+" and CODVOL = '"+codVol+"'";
 			PreparedStatement  consultaValidando1 = jdbcWrapper.getPreparedStatement(sqlunidade);
 			ResultSet consultaUnidade = consultaValidando1.executeQuery();
@@ -53,15 +43,15 @@ public class atualizarItens2 {
 			if(consultaUnidade.next()){
 			
 				String divide = consultaUnidade.getString("DIVIDEMULTIPLICA");
-				quantidade = consultaUnidade.getBigDecimal("QUANTIDADE");
+				BigDecimal quantidade = consultaUnidade.getBigDecimal("QUANTIDADE");
 				
-				valor = valor.multiply(quantidade);
+				if (divide.equalsIgnoreCase("M")) valor = valor.multiply(quantidade);
+				else if (divide.equalsIgnoreCase("D")) valor = valor.divide(quantidade);
 				
 			}
-			
-	
-		vlrTot = (valor.multiply(markupFator)).multiply(qtdNeg);
-		vlrUnit = (valor.multiply(markupFator));
+
+		BigDecimal vlrUnit = valor.multiply(markupFator);
+		BigDecimal vlrTot = vlrUnit.multiply(qtdNeg);
 		
 		String update = "UPDATE AD_ITENSLICITACAO SET VLRTOTAL="+vlrTot+",VLRUNIT="+vlrUnit+" "
 				+ "where CODITELIC="+codIteLic+" and CODLIC="+codLic;

@@ -26,17 +26,17 @@ public class inserirItens {
 		jdbcWrapper.openSession();
 		
 		
-		DynamicVO dados = (DynamicVO) arg0.getVo();
-		BigDecimal codIteLic = dados.asBigDecimalOrZero("CODITELIC");
-		BigDecimal codLic = dados.asBigDecimalOrZero("CODLIC");
-		BigDecimal codProd = dados.asBigDecimalOrZero("CODPROD");
-		BigDecimal qtdNeg = dados.asBigDecimalOrZero("QTDE");
-		BigDecimal vlrTot = dados.asBigDecimalOrZero("VLRTOTAL");
-		BigDecimal vlrUnit = dados.asBigDecimalOrZero("VLRUNIT");
-		BigDecimal item = dados.asBigDecimalOrZero("ITEM");
-		BigDecimal markupFator = dados.asBigDecimalOrZero("MARKUPFATOR");
-		String codVol = dados.asString("UNID");
-		BigDecimal replicando = (dados.asBigDecimalOrZero("REPLICANDO"));
+		DynamicVO itemVO = (DynamicVO) arg0.getVo();
+		BigDecimal codIteLic = itemVO.asBigDecimalOrZero("CODITELIC");
+		BigDecimal codLic = itemVO.asBigDecimalOrZero("CODLIC");
+		BigDecimal codProd = itemVO.asBigDecimalOrZero("CODPROD");
+		BigDecimal qtdNeg = itemVO.asBigDecimalOrZero("QTDE");
+		BigDecimal vlrTot = itemVO.asBigDecimalOrZero("VLRTOTAL");
+		BigDecimal vlrUnit = itemVO.asBigDecimalOrZero("VLRUNIT");
+		BigDecimal item = itemVO.asBigDecimalOrZero("ITEM");
+		BigDecimal markupFator = itemVO.asBigDecimalOrZero("MARKUPFATOR");
+		String codVol = itemVO.asString("UNID");
+		BigDecimal replicando = (itemVO.asBigDecimalOrZero("REPLICANDO"));
 		
 		
 		if(!(markupFator.doubleValue()>0)) {
@@ -57,9 +57,9 @@ public class inserirItens {
 		String  consultaDados = "SELECT coalesce(CUSGER,0) as CUSGER FROM TGFCUS WHERE CODPROD = "+codProd+" AND DTATUAL IN (\r\n"
 				+ "select MAX(DTATUAL) AS VALOR from TGFCUS WHERE CODPROD = "+codProd+")";
 		
-		PreparedStatement  consultaValidando = jdbcWrapper.getPreparedStatement(consultaDados);
-		ResultSet consulta = consultaValidando.executeQuery();
-		BigDecimal valor = new BigDecimal(0);
+		pstmt = jdbcWrapper.getPreparedStatement(consultaDados);
+		ResultSet consulta = pstmt.executeQuery();
+		BigDecimal valor = BigDecimal.ZERO;
 
 		while(consulta.next()) valor = (consulta.getBigDecimal("CUSGER") == null) ? BigDecimal.ZERO : consulta.getBigDecimal("CUSGER");
 
@@ -68,8 +68,9 @@ public class inserirItens {
 			throw new PersistenceException("Custo do produto obrigatório, não encontrado ou está zerado o custo, no cadastro de custo "+consultaDados);
 	
 		}
-		vlrTot = (valor.multiply(markupFator)).multiply(qtdNeg);
-		vlrUnit = (valor.multiply(markupFator));
+		vlrUnit = valor.multiply(markupFator);
+		vlrTot = vlrUnit.multiply(qtdNeg);
+
 		String update;
 		String update1;
 		if(!((replicando.intValue())>0)) {
@@ -78,42 +79,32 @@ public class inserirItens {
 				
 				update1 = "UPDATE TGFITE SET VLRTOT="+vlrTot+",QTDNEG="+qtdNeg+",VLRUNIT="+vlrUnit+" "
 						+ " where AD_CODITELIC="+codIteLic+" and AD_CODLIC="+codLic;
-				
-				PreparedStatement  updateValidando1 = jdbcWrapper.getPreparedStatement(update1);
-				updateValidando1.executeUpdate();
+
+				pstmt = jdbcWrapper.getPreparedStatement(update1);
+				pstmt.executeUpdate();
 				
 				
 		}else {
 				update = "UPDATE AD_ITENSLICITACAO SET REPLICANDO=0 "
 						+ "WHERE CODITELIC="+codIteLic+" AND CODLIC="+codLic;
 		}
-		PreparedStatement  updateValidando = jdbcWrapper.getPreparedStatement(update);
-  		updateValidando.executeUpdate();
 
-  		String consultaCabecalho = "select CODEMP, NUNOTA, CODLIC from AD_LICITACAO where CODLIC="+codLic;
-		PreparedStatement  consultaValidando2 = jdbcWrapper.getPreparedStatement(consultaCabecalho);
-		ResultSet consultaCabecalho2 = consultaValidando2.executeQuery();
+		pstmt = jdbcWrapper.getPreparedStatement(update);
+		pstmt.executeUpdate();
 
-		while(consultaCabecalho2.next()){
+		pstmt = jdbcWrapper.getPreparedStatement("select * from AD_LICITACAO where CODLIC="+codLic);
+		ResultSet rs = pstmt.executeQuery();
 
-			BigDecimal nuNota = consultaCabecalho2.getBigDecimal("NUNOTA");
-			BigDecimal codEmp = consultaCabecalho2.getBigDecimal("CODEMP");
-				salvarDados.salvarItensDados(
-  				dwf, 
-  				nuNota, 
-  				codProd, 
-  				qtdNeg, 
-  				codVol, 
-  				vlrUnit, 
-  				vlrTot, 
-  				codEmp,
-  				codIteLic,
-  				codLic);
-				
-				ImpostosHelpper impostos = new ImpostosHelpper();
-				impostos.setForcarRecalculo(true);
-				impostos.calcularImpostos(nuNota);
-				
+		while(rs.next()){
+
+			BigDecimal nuNota = rs.getBigDecimal("NUNOTA");
+			BigDecimal codEmp = rs.getBigDecimal("CODEMP");
+
+			salvarDados.salvarItensDados(dwf,nuNota,codProd,qtdNeg,codVol,vlrUnit,vlrTot,codEmp,codIteLic,codLic);
+
+			ImpostosHelpper impostos = new ImpostosHelpper();
+			impostos.setForcarRecalculo(true);
+			impostos.calcularImpostos(nuNota);
 		}
 		
 

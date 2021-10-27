@@ -32,7 +32,6 @@ public class atualizarItens4 {
 		BigDecimal codProd = (dados.asBigDecimalOrZero("CODPROD"));
 		BigDecimal qtdNeg = (dados.asBigDecimalOrZero("QTDE"));
 		BigDecimal custo = (dados.asBigDecimalOrZero("CUSTO"));
-		BigDecimal vlrTot = (dados.asBigDecimalOrZero("VLRTOTAL"));
 		BigDecimal vlrUnit = (dados.asBigDecimalOrZero("VLRUNIT"));
 		BigDecimal markupFator = (dados.asBigDecimalOrZero("MARKUPFATOR"));
 		String codVol = (dados.asString("UNID"));
@@ -61,8 +60,8 @@ public class atualizarItens4 {
 			}
 			
 		markupFator = vlrUnit.divide(valor,4, RoundingMode.HALF_UP);
-		vlrTot = (vlrUnit).multiply(qtdNeg);
-		//vlrUnit = (valor.multiply(markupFator));
+		BigDecimal vlrTot = vlrUnit.multiply(qtdNeg);
+		//vlrUnit = valor.multiply(markupFator);
 		
 		String update = "UPDATE AD_ITENSLICITACAO SET VLRTOTAL="+vlrTot+",VLRUNIT="+vlrUnit+",MARKUPFATOR="+markupFator+" "
 				+ "where CODITELIC="+codIteLic+" and CODLIC="+codLic;;

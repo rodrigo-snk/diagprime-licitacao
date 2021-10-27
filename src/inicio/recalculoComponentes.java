@@ -11,7 +11,6 @@ import br.com.sankhya.jape.EntityFacade;
 import br.com.sankhya.jape.dao.JdbcWrapper;
 import br.com.sankhya.modelcore.comercial.impostos.ImpostosHelpper;
 import br.com.sankhya.modelcore.util.EntityFacadeFactory;
-import processamento.recalcularItens;
 import save.salvarDados;
 
 public class recalculoComponentes implements AcaoRotinaJava {
@@ -23,7 +22,7 @@ public class recalculoComponentes implements AcaoRotinaJava {
 		jdbc.openSession();
 		
 		Registro[] registros = arg0.getLinhas();
-		int usuario = Integer.parseInt(""+arg0.getUsuarioLogado());
+		//int usuario = Integer.parseInt(""+arg0.getUsuarioLogado());
 		BigDecimal codLic = (BigDecimal) registros[0].getCampo("CODLIC");
 
 		String sql = "select * from ad_licitacao  where codlic=" + codLic;
@@ -33,17 +32,13 @@ public class recalculoComponentes implements AcaoRotinaJava {
 		while (rset.next()) {
 
 			BigDecimal nuNota = rset.getBigDecimal("NUNOTA");
-			BigDecimal codEmp = rset.getBigDecimal("CODEMP");
 			ImpostosHelpper impostos = new ImpostosHelpper();
 			impostos.setForcarRecalculo(true);
 			impostos.calcularImpostos(nuNota);
 		}
 
 		salvarDados.insertComponentes(codLic, jdbc);
-
 		jdbc.closeSession();
-
-
 		arg0.setMensagemRetorno("Recalculado com sucesso");
 	}
 

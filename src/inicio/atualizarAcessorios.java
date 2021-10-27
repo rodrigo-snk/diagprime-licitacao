@@ -8,9 +8,6 @@ import br.com.sankhya.jape.event.TransactionContext;
 import br.com.sankhya.jape.vo.DynamicVO;
 import br.com.sankhya.modelcore.util.EntityFacadeFactory;
 import processamento.Acessorios;
-
-
-
 import java.math.BigDecimal;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -50,7 +47,6 @@ public class atualizarAcessorios implements EventoProgramavelJava {
         BigDecimal markupFator = acessorio.asBigDecimalOrZero("MARKUPFATOR");
 
         //throw new Exception(codLic.toString() + " Esse é o codlic");
-
         if(!(markupFator.doubleValue()>0)) markupFator = BigDecimal.ONE;
         if(!(qtdNeg.doubleValue()>0)) qtdNeg = BigDecimal.ONE;
 

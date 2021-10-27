@@ -40,27 +40,23 @@ public class recalcularItens {
 			qtdNeg = BigDecimal.ONE;
 		}
 		
-		String  consultaDados = "SELECT coalesce(CUSGER,0) as CUSGER FROM TGFCUS WHERE CODPROD = "+codProd+" AND DTATUAL IN (\r\n"
+		final String consultaDados = "SELECT coalesce(CUSGER,0) as CUSGER FROM TGFCUS WHERE CODPROD = "+codProd+" AND DTATUAL IN (\r\n"
 				+ "select MAX(DTATUAL) AS VALOR from TGFCUS WHERE CODPROD = "+codProd+")";
 		
-		PreparedStatement  consultaValidando = jdbcWrapper.getPreparedStatement(consultaDados);
+		PreparedStatement consultaValidando = jdbcWrapper.getPreparedStatement(consultaDados);
 		ResultSet consulta = consultaValidando.executeQuery();
-		BigDecimal valor = new BigDecimal(0);
+		BigDecimal custo = BigDecimal.ZERO;
 		while(consulta.next()){
-			
-			valor = consulta.getBigDecimal("CUSGER");
-			
+			custo = consulta.getBigDecimal("CUSGER");
 		}
 		
-		if(!(valor.intValue()>0)) {
-			
+		if(!(custo.intValue()>0)) {
 			throw new PersistenceException("Custo do produto obrigatório, não encontrado ou está zerado o custo, no cadastro de custo "+consultaDados);
-	
 		}
-		vlrTot = (valor.multiply(markupFator)).multiply(qtdNeg);
-		vlrUnit = (valor.multiply(markupFator));
-		
-		String update = "UPDATE AD_ITENSLICITACAO SET MARKUPFATOR="+markupFator+",CUSTO="+valor+",VLRTOTAL="+vlrTot+",QTDE="+qtdNeg+",VLRUNIT="+vlrUnit+" "
+		vlrUnit = custo.multiply(markupFator);
+		vlrTot = vlrUnit.multiply(qtdNeg);
+
+		String update = "UPDATE AD_ITENSLICITACAO SET MARKUPFATOR="+markupFator+",CUSTO="+custo+",VLRTOTAL="+vlrTot+",QTDE="+qtdNeg+",VLRUNIT="+vlrUnit+" "
 				+ "where CODITELIC="+codIteLic;
 		PreparedStatement  updateValidando = jdbcWrapper.getPreparedStatement(update);
   		updateValidando.executeUpdate();
@@ -73,7 +69,9 @@ public class recalcularItens {
 
 			BigDecimal nuNota = consultaCabecalho2.getBigDecimal("NUNOTA");
 			BigDecimal codEmp = consultaCabecalho2.getBigDecimal("CODEMP");
-				salvarDados.salvarItensDados(
+
+			//ERRO adiciona um novo item na TGFITE
+			/*salvarDados.salvarItensDados(
   				dwf, 
   				nuNota, 
   				codProd, 
@@ -83,7 +81,7 @@ public class recalcularItens {
   				vlrTot, 
   				codEmp,
   				codIteLic,
-  				codLic);
+  				codLic);*/
 				
 				ImpostosHelpper impostos = new ImpostosHelpper();
 				impostos.setForcarRecalculo(true);

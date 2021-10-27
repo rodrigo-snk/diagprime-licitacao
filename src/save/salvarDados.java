@@ -12,7 +12,6 @@ import br.com.sankhya.jape.EntityFacade;
 import br.com.sankhya.jape.dao.JdbcWrapper;
 import br.com.sankhya.jape.vo.DynamicVO;
 import br.com.sankhya.jape.vo.EntityVO;
-import br.com.sankhya.modelcore.util.EntityFacadeFactory;
 import processamento.Acessorios;
 
 public class salvarDados {
@@ -54,6 +53,20 @@ public class salvarDados {
     	return faturaVO.asBigDecimal("NUNOTA");
     }
 
+	/**
+	 * Adiciona os itens no ItemNota (TGFITE)
+	 * @param dwf dwfFacade
+	 * @param nuNota Nro.Único da Nota
+	 * @param codProd Cód. Produto
+	 * @param qtdNeg Quantidade
+	 * @param codVol Unidade de volume
+	 * @param vlrUnit Vlr. Unitário
+	 * @param vlrTot Vlr. Total
+	 * @param codEmp Empresa
+	 * @param codIteLic Cód. Item Licitação
+	 * @param codLic Cód. Licitação
+	 * @throws Exception
+	 */
     public static void salvarItensDados(
     		EntityFacade dwf,
     		BigDecimal nuNota,
@@ -78,7 +91,7 @@ public class salvarDados {
          itemVO.setProperty("AD_CODLIC", codLic);
          itemVO.setProperty("USOPROD", "V");
          itemVO.setProperty("RESERVA", "N");
-		 itemVO.setProperty("ATUALESTOQUE", new BigDecimal(0));
+		 itemVO.setProperty("ATUALESTOQUE", BigDecimal.ZERO);
 		//if(tipo.equalsIgnoreCase("F")) {
          //itemVO.setProperty("STATUSNOTA", "L");
          //}
@@ -89,8 +102,6 @@ public class salvarDados {
     
     public static void insertComponentes(BigDecimal codLic,JdbcWrapper jdbc) throws Exception {
 
-
-    	
     	String insertSql = "insert into AD_LICITACAOCOMPONENTES(CODLICCOM,CODLIC,CODPROD,QTDNEG,CODVOL,CUSTO,MARKUPFATOR,VLRUNIT)\r\n"
     			+ "  (select rownum,CODLIC,CODMATPRIMA,QTDNEG,CODVOL,CUSTOMATERIAPRIMA,MARKUPFATOR,VLRUNIT from (\r\n"
     			+ "select CODLIC,CODMATPRIMA,SUM(QTDNEG) as QTDNEG,CODVOL,(CUSTOMATERIAPRIMA) as CUSTOMATERIAPRIMA,MARKUPFATOR as MARKUPFATOR, VLRUNIT as VLRUNIT\r\n"
@@ -116,7 +127,7 @@ public class salvarDados {
     	PreparedStatement insert = jdbc.getPreparedStatement(insertSql);
   		insert.executeUpdate();
 
-		String sql = "select LIC.NUNOTA, LIC.CODEMP, COMP.* from AD_LICITACAOCOMPONENTES COMP INNER JOIN AD_LICITACAO LIC ON COMP.CODLIC = LIC.CODLIC where LIC.CODLIC="+codLic;
+		final String sql = "select LIC.NUNOTA, LIC.CODEMP, COMP.* from AD_LICITACAOCOMPONENTES COMP INNER JOIN AD_LICITACAO LIC ON COMP.CODLIC = LIC.CODLIC where LIC.CODLIC="+codLic;
 		PreparedStatement consultaLic = jdbc.getPreparedStatement(sql);
 		ResultSet componente = consultaLic.executeQuery();
 
@@ -140,7 +151,7 @@ public class salvarDados {
     }
 
 
-    public static void salvarItensDados(
+   /* public static void salvarItensDados(
     		EntityFacade dwf,
     		BigDecimal codLic,
     		BigDecimal codProd,
@@ -158,29 +169,6 @@ public class salvarDados {
          itemVO.setProperty("VLRUNIT", vlrUnit);
          dwf.createEntity("ItemNota", (EntityVO)itemVO);
          
-    }
-
-
-    
-    public static void salvarDadosCabecalho(
-    		EntityFacade dwf,
-    		BigDecimal codLic,
-    		BigDecimal codProd,
-    		BigDecimal qtdNeg,
-    		String codVol, 
-    		BigDecimal vlrUnit, 
-    		BigDecimal custo) throws Exception {
-    	
-    	
-    	 DynamicVO itemVO = (DynamicVO)dwf.getDefaultValueObjectInstance("AD_ITENSLICITACAO");
-         itemVO.setProperty("CODLIC", codLic);
-         itemVO.setProperty("CODPROD", codProd);
-         itemVO.setProperty("QTDE", qtdNeg);
-         itemVO.setProperty("CUSTO", custo);
-         itemVO.setProperty("CODVOL", codVol);
-         itemVO.setProperty("VLRUNIT", vlrUnit);
-         dwf.createEntity("ItemNota", (EntityVO)itemVO);
-         
-    }
+    }*/
 
 }
