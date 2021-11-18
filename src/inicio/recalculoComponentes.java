@@ -37,6 +37,7 @@ public class recalculoComponentes implements AcaoRotinaJava {
 			impostos.calcularImpostos(nuNota);
 		}
 
+
 		salvarDados.insertComponentes(codLic, jdbc);
 		jdbc.closeSession();
 		arg0.setMensagemRetorno("Recalculado com sucesso");

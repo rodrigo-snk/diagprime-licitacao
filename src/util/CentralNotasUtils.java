@@ -82,8 +82,8 @@ public class CentralNotasUtils {
         PersistentObjectUID objectUID = rootDAO.getSQLProvider().getPkObjectUID();
         EntityPropertyDescriptor[] pkFields = objectUID.getFieldDescriptors();
         Map<String, Object> pkArray = new HashMap<>();
-        for (int i = 0; i < pkFields.length; i++) {
-            EntityField field = pkFields[i].getField();
+        for (EntityPropertyDescriptor pkField : pkFields) {
+            EntityField field = pkField.getField();
 
             String fieldName = field.getName();
             Object typedValue = vo.getProperty(fieldName);

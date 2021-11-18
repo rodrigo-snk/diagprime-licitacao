@@ -2,6 +2,7 @@ package inicio;
 import br.com.sankhya.extensions.eventoprogramavel.EventoProgramavelJava;
 import br.com.sankhya.jape.event.PersistenceEvent;
 import br.com.sankhya.jape.event.TransactionContext;
+import processamento.updateItens;
 import processamento.gerarNotas;
 
 public class atualizarComponentes implements EventoProgramavelJava {
@@ -14,14 +15,13 @@ public class atualizarComponentes implements EventoProgramavelJava {
 
 	@Override
 	public void afterInsert(PersistenceEvent arg0) throws Exception {
-
 		gerarNotas.inserirNota(arg0);
+		updateItens.atualizaImpostosFederais(arg0);
 	}
 
 	@Override
 	public void afterUpdate(PersistenceEvent arg0) throws Exception {
-		// TODO Auto-generated method stub
-
+		updateItens.atualizaImpostosFederais(arg0);
 	}
 
 	@Override

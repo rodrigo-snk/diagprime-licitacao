@@ -9,27 +9,25 @@ import br.com.sankhya.jape.dao.JdbcWrapper;
 import br.com.sankhya.jape.event.PersistenceEvent;
 import br.com.sankhya.jape.event.TransactionContext;
 import br.com.sankhya.jape.vo.DynamicVO;
+import br.com.sankhya.modelcore.MGEModelException;
 import br.com.sankhya.modelcore.util.EntityFacadeFactory;
 import consultas.consultasDados;
-import processamento.atualizarItens1;
-import processamento.atualizarItens2;
-import processamento.atualizarItens4;
-import processamento.deleteItens4;
-import processamento.gerarNotas;
-import processamento.inserirItens;
+import processamento.deleteItens;
+import processamento.insertItens;
+import processamento.updateItens;
 
 public class atualizarItens implements EventoProgramavelJava {
 
 	@Override
 	public void afterDelete(PersistenceEvent arg0) throws Exception {
 
-		deleteItens4.atualizarTotal(arg0);
+		deleteItens.atualizarTotal(arg0);
 	}
 
 	@Override
 	public void afterInsert(PersistenceEvent arg0) throws Exception {
 
-		inserirItens.atualizarCusto(arg0);
+		insertItens.atualizarCusto(arg0);
 		EntityFacade dwfFacade = EntityFacadeFactory.getDWFFacade();
 		JdbcWrapper jdbc = dwfFacade.getJdbcWrapper();
 		jdbc.openSession();
@@ -39,8 +37,8 @@ public class atualizarItens implements EventoProgramavelJava {
 		BigDecimal codLic = dados.asBigDecimalOrZero("CODLIC");
 		BigDecimal codProd = dados.asBigDecimalOrZero("CODPROD");
 		final String sql = consultasDados.retornaDadosItensProdutos(codProd.toString());
-		PreparedStatement ps = jdbc.getPreparedStatement(sql);
-  		ResultSet rs = ps.executeQuery();
+		PreparedStatement pstmt = jdbc.getPreparedStatement(sql);
+  		ResultSet rs = pstmt.executeQuery();
 			 
   	    while(rs.next()) {
   	    	
@@ -54,10 +52,8 @@ public class atualizarItens implements EventoProgramavelJava {
 							+ "PROCEDENCIA='"+AD_PROCEDENCIA+"',"
 							+ " MARCA='"+MARCA+"',ANVISA='"+AD_NRREGISTRO+"' WHERE CODITELIC="+codIteLic+" AND "
 							+ " CODLIC="+codLic;
-  			ps = jdbc.getPreparedStatement(updateItens);
-  	  		ps.executeUpdate();
-
-
+  			pstmt = jdbc.getPreparedStatement(updateItens);
+  	  		pstmt.executeUpdate();
 		}
 			jdbc.closeSession();
 
@@ -65,8 +61,13 @@ public class atualizarItens implements EventoProgramavelJava {
 
 	@Override
 	public void afterUpdate(PersistenceEvent arg0) throws Exception {
-		// TODO Auto-generated method stub
 
+		if (arg0.getModifingFields().isModifing("QTDE")) {
+			updateItens.atualizarCustoProduto(arg0);
+		}
+		if (arg0.getModifingFields().isModifing("UNID")) {
+			updateItens.atualizarCustoVolume(arg0);
+		}
 
 	}
 
@@ -90,24 +91,19 @@ public class atualizarItens implements EventoProgramavelJava {
 
 	@Override
 	public void beforeUpdate(PersistenceEvent arg0) throws Exception {
-		if (arg0.getModifingFields().isModifing("UNID")) {
-			atualizarItens1.atualizarCustoVolume(arg0);
-		}
+
 
 		if (arg0.getModifingFields().isModifing("CUSTO") || arg0.getModifingFields().isModifing("MARKUPFATOR")) {
-			atualizarItens2.atualizarCustoProduto(arg0);
-		}
-
-		if (arg0.getModifingFields().isModifing("QTDE")) {
-			atualizarItens2.atualizarCustoProduto(arg0);
+			updateItens.atualizarCustoProduto(arg0);
 		}
 
 		if (arg0.getModifingFields().isModifing("VLRUNIT")) {
-			atualizarItens4.atualizarCustoProduto(arg0);
+			updateItens.atualizarVlrUnit(arg0);
 		}
 
-		
-		
+
+
+
 	}
 
 }

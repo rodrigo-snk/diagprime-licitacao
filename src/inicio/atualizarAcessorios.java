@@ -8,6 +8,8 @@ import br.com.sankhya.jape.event.TransactionContext;
 import br.com.sankhya.jape.vo.DynamicVO;
 import br.com.sankhya.modelcore.util.EntityFacadeFactory;
 import processamento.Acessorios;
+import processamento.insertItens;
+
 import java.math.BigDecimal;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -20,6 +22,9 @@ public class atualizarAcessorios implements EventoProgramavelJava {
 
     @Override
     public void beforeUpdate(PersistenceEvent arg0) throws Exception {
+        if (arg0.getModifingFields().isModifing("CUSTO") || arg0.getModifingFields().isModifing("MARKUPFATOR")) {
+            Acessorios.atualizarCustoAcessorio(arg0);
+        }
 
     }
 
@@ -30,7 +35,7 @@ public class atualizarAcessorios implements EventoProgramavelJava {
 
     @Override
     public void afterInsert(PersistenceEvent arg0) throws Exception {
-        //inserirItens.atualizarCusto(arg0);
+        insertItens.atualizarCusto(arg0);
         EntityFacade dwfFacade = EntityFacadeFactory.getDWFFacade();
         JdbcWrapper jdbc = dwfFacade.getJdbcWrapper();
         jdbc.openSession();

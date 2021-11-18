@@ -12,13 +12,10 @@ import br.com.sankhya.jape.vo.DynamicVO;
 import br.com.sankhya.modelcore.comercial.impostos.ImpostosHelpper;
 import br.com.sankhya.modelcore.util.EntityFacadeFactory;
 
-public class deleteItens4 {
-	
-	
-	
+public class deleteItens {
+
 	public static void atualizarTotal(PersistenceEvent arg0) throws Exception {
-		
-		
+
 		EntityFacade dwf = EntityFacadeFactory.getDWFFacade();
 		JdbcWrapper jdbcWrapper = dwf.getJdbcWrapper();
 		jdbcWrapper.openSession();
@@ -38,7 +35,6 @@ public class deleteItens4 {
 
 		while(consultaCabecalho2.next()){
 
-			
 			BigDecimal nuNota = consultaCabecalho2.getBigDecimal("NUNOTA");
 			BigDecimal codEmp = consultaCabecalho2.getBigDecimal("CODEMP");
 				

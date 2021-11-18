@@ -12,7 +12,10 @@ import br.com.sankhya.jape.EntityFacade;
 import br.com.sankhya.jape.dao.JdbcWrapper;
 import br.com.sankhya.jape.event.PersistenceEvent;
 import br.com.sankhya.jape.vo.DynamicVO;
+import br.com.sankhya.jape.vo.EntityVO;
+import br.com.sankhya.modelcore.MGEModelException;
 import br.com.sankhya.modelcore.util.EntityFacadeFactory;
+import com.sankhya.util.TimeUtils;
 import consultas.consultasDados;
 import save.salvarDados;
 import util.login;
@@ -22,37 +25,29 @@ public class gerarNotas {
 	
 	public static void inserirNota(PersistenceEvent arg0) throws Exception {
 		
-		BigDecimal nuNota = BigDecimal.ZERO;
-		DynamicVO financeiro = (DynamicVO) arg0.getVo();
-		BigDecimal codParc = financeiro.asBigDecimalOrZero("CODPARC");
-		BigDecimal codLic =  financeiro.asBigDecimalOrZero("CODLIC");
-		BigDecimal codEmp = financeiro.asBigDecimalOrZero("CODEMP");
-		BigDecimal codNat = financeiro.asBigDecimalOrZero("CODNAT");
-		BigDecimal codCencus = financeiro.asBigDecimalOrZero("CODCENCUS");
-		BigDecimal codTipVenda = financeiro.asBigDecimalOrZero("CODTIPVENDA");
+		DynamicVO licitacaoVO = (DynamicVO) arg0.getVo();
+		BigDecimal codParc = licitacaoVO.asBigDecimalOrZero("CODPARC");
+		BigDecimal codLic =  licitacaoVO.asBigDecimalOrZero("CODLIC");
+		BigDecimal codEmp = licitacaoVO.asBigDecimalOrZero("CODEMP");
+		BigDecimal codNat = licitacaoVO.asBigDecimalOrZero("CODNAT");
+		BigDecimal codCencus = licitacaoVO.asBigDecimalOrZero("CODCENCUS");
+		BigDecimal codTipVenda = licitacaoVO.asBigDecimalOrZero("CODTIPVENDA");
 	
 		EntityFacade dwf = EntityFacadeFactory.getDWFFacade();
 		JdbcWrapper jdbcWrapper = dwf.getJdbcWrapper();
-		
-			jdbcWrapper.openSession();
+		jdbcWrapper.openSession();
 
-		
-		Date data1 = new Date();
-		SimpleDateFormat formatador = new SimpleDateFormat("dd/MM/yyyy");
-		String dtNeg = formatador.format(data1);
-		
-		
 		String consulta = consultasDados.retornoDados();
-		PreparedStatement  consultaPar = jdbcWrapper.getPreparedStatement(consulta);
-		ResultSet retornoParametros = consultaPar.executeQuery();
-		while (retornoParametros.next()) {
+		PreparedStatement pstmt = jdbcWrapper.getPreparedStatement(consulta);
+		ResultSet rs = pstmt.executeQuery();
+		while (rs.next()) {
 		
-			String url = retornoParametros.getString("URL");
-			String login11 = retornoParametros.getString("LOGIN");
-			String senha = retornoParametros.getString("SENHA");
-			BigDecimal codTipOper = retornoParametros.getBigDecimal("TOP");
+			String url = rs.getString("URL");
+			String login11 = rs.getString("LOGIN");
+			String senha = rs.getString("SENHA");
+			BigDecimal codTipOper = rs.getBigDecimal("TOP");
 
-			nuNota = salvarDados.salvarCabecalhoDados(
+			BigDecimal nuNota = salvarDados.salvarCabecalhoDados(
 					dwf, 
 					codEmp, 
 					codParc, 
@@ -60,20 +55,20 @@ public class gerarNotas {
 					codTipVenda, 
 					codNat, 
 					codCencus, 
-					BigDecimal.ZERO, 
-					dtNeg,
+					BigDecimal.ZERO,
+					TimeUtils.getNow(),
 					codLic);
-			
 
-		    //String chave = login.loginNovo1(url,login11,senha);
+
+			//String chave = login.loginNovo1(url,login11,senha);
 			//Retorno1 ret = incluirNota.IncluirNota(url, codParc+"", codEmp+"", DTNEG, codTipVenda+"", chave,codTipOper);
 			//nuNota = ret.getNunota();
-			
-			String update = "UPDATE AD_LICITACAO SET NUNOTA="+nuNota+" where CODLIC="+codLic;
-			PreparedStatement  updatePar = jdbcWrapper.getPreparedStatement(update);
-			updatePar.executeUpdate();
-		
+
+			licitacaoVO.setProperty("NUNOTA", nuNota);
+			dwf.saveEntity("AD_LICITACAO", (EntityVO) licitacaoVO);
+
 		}
+
 		jdbcWrapper.closeSession();
 
 	}

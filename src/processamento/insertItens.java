@@ -9,23 +9,20 @@ import br.com.sankhya.jape.PersistenceException;
 import br.com.sankhya.jape.dao.JdbcWrapper;
 import br.com.sankhya.jape.event.PersistenceEvent;
 import br.com.sankhya.jape.vo.DynamicVO;
+import br.com.sankhya.modelcore.MGEModelException;
 import br.com.sankhya.modelcore.comercial.impostos.ImpostosHelpper;
 import br.com.sankhya.modelcore.util.EntityFacadeFactory;
 import consultas.consultasDados;
 import save.salvarDados;
 
-public class inserirItens {
-	
-	
-	
+public class insertItens {
+
 	public static void atualizarCusto(PersistenceEvent arg0) throws Exception {
-		
-		
+
 		EntityFacade dwf = EntityFacadeFactory.getDWFFacade();
 		JdbcWrapper jdbcWrapper = dwf.getJdbcWrapper();
 		jdbcWrapper.openSession();
-		
-		
+
 		DynamicVO itemVO = (DynamicVO) arg0.getVo();
 		BigDecimal codIteLic = itemVO.asBigDecimalOrZero("CODITELIC");
 		BigDecimal codLic = itemVO.asBigDecimalOrZero("CODLIC");
@@ -37,37 +34,35 @@ public class inserirItens {
 		BigDecimal markupFator = itemVO.asBigDecimalOrZero("MARKUPFATOR");
 		String codVol = itemVO.asString("UNID");
 		BigDecimal replicando = (itemVO.asBigDecimalOrZero("REPLICANDO"));
-		
-		
+
 		if(!(markupFator.doubleValue()>0)) {
 			markupFator = BigDecimal.ONE;
 		}
 		
 		if(!(qtdNeg.doubleValue()>0)) {
 			qtdNeg = BigDecimal.ONE;
-			
 		}
+
 		String consultaProd = consultasDados.retornaDadosItensProdutos(codProd.toString());
 		PreparedStatement pstmt = jdbcWrapper.getPreparedStatement(consultaProd);
-		ResultSet rset = pstmt.executeQuery();
+		ResultSet rs = pstmt.executeQuery();
 		boolean isServico = false;
-		while(rset.next()) isServico = rset.getString("USOPROD").equals("S");
+		while(rs.next()) isServico = rs.getString("USOPROD").equals("S");
 
 		
-		String  consultaDados = "SELECT coalesce(CUSGER,0) as CUSGER FROM TGFCUS WHERE CODPROD = "+codProd+" AND DTATUAL IN (\r\n"
+		String consultaDados = "SELECT coalesce(CUSGER,0) as CUSGER FROM TGFCUS WHERE CODPROD = "+codProd+" AND DTATUAL IN (\r\n"
 				+ "select MAX(DTATUAL) AS VALOR from TGFCUS WHERE CODPROD = "+codProd+")";
 		
 		pstmt = jdbcWrapper.getPreparedStatement(consultaDados);
-		ResultSet consulta = pstmt.executeQuery();
+		rs = pstmt.executeQuery();
 		BigDecimal valor = BigDecimal.ZERO;
 
-		while(consulta.next()) valor = (consulta.getBigDecimal("CUSGER") == null) ? BigDecimal.ZERO : consulta.getBigDecimal("CUSGER");
+		while(rs.next()) valor = (rs.getBigDecimal("CUSGER") == null) ? BigDecimal.ZERO : rs.getBigDecimal("CUSGER");
 
 		if(!(valor.intValue() > 0) && !isServico) {
-			
 			throw new PersistenceException("Custo do produto obrigatório, não encontrado ou está zerado o custo, no cadastro de custo "+consultaDados);
-	
 		}
+
 		vlrUnit = valor.multiply(markupFator);
 		vlrTot = vlrUnit.multiply(qtdNeg);
 
@@ -92,23 +87,35 @@ public class inserirItens {
 		pstmt = jdbcWrapper.getPreparedStatement(update);
 		pstmt.executeUpdate();
 
-		pstmt = jdbcWrapper.getPreparedStatement("select * from AD_LICITACAO where CODLIC="+codLic);
-		ResultSet rs = pstmt.executeQuery();
+		DynamicVO licitacaoVO = (DynamicVO) dwf.findEntityByPrimaryKeyAsVO("AD_LICITACAO", codLic);
+		BigDecimal nuNota = licitacaoVO.asBigDecimal("NUNOTA");
+		BigDecimal codEmp = licitacaoVO.asBigDecimal("CODEMP");
 
-		while(rs.next()){
+		pstmt = jdbcWrapper.getPreparedStatement("SELECT DIVIDEMULTIPLICA,MULTIPVLR, QUANTIDADE FROM TGFVOA WHERE CODPROD = "+codProd+" and CODVOL = '"+codVol+"'");
+		rs = pstmt.executeQuery();
 
-			BigDecimal nuNota = rs.getBigDecimal("NUNOTA");
-			BigDecimal codEmp = rs.getBigDecimal("CODEMP");
+		if(rs.next()){
+			final String divideOuMultiplica = rs.getString("DIVIDEMULTIPLICA");
+			BigDecimal quantidade = rs.getBigDecimal("QUANTIDADE").multiply(rs.getBigDecimal("MULTIPVLR"));
+
+			if (divideOuMultiplica.equalsIgnoreCase("M")) {
+				qtdNeg = qtdNeg.multiply(quantidade);
+				vlrUnit = vlrUnit.divide(quantidade);
+			}
+			else if (divideOuMultiplica.equalsIgnoreCase("D")) {
+				qtdNeg = qtdNeg.divide(quantidade);
+				vlrUnit = vlrUnit.multiply(quantidade);
+			}
 
 			salvarDados.salvarItensDados(dwf,nuNota,codProd,qtdNeg,codVol,vlrUnit,vlrTot,codEmp,codIteLic,codLic);
 
-			ImpostosHelpper impostos = new ImpostosHelpper();
-			impostos.setForcarRecalculo(true);
-			impostos.calcularImpostos(nuNota);
 		}
-		
 
-		
+		ImpostosHelpper impostos = new ImpostosHelpper();
+		impostos.setForcarRecalculo(true);
+		impostos.calcularImpostos(nuNota);
+
+
 		salvarDados.insertComponentes(codLic, jdbcWrapper);
 		jdbcWrapper.closeSession();
 	}
