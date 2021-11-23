@@ -10,8 +10,10 @@ import br.com.sankhya.jape.event.PersistenceEvent;
 import br.com.sankhya.jape.event.TransactionContext;
 import br.com.sankhya.jape.vo.DynamicVO;
 import br.com.sankhya.modelcore.MGEModelException;
+import br.com.sankhya.modelcore.comercial.impostos.ImpostosHelpper;
 import br.com.sankhya.modelcore.util.EntityFacadeFactory;
 import consultas.consultasDados;
+import processamento.Impostos;
 import processamento.deleteItens;
 import processamento.insertItens;
 import processamento.updateItens;
@@ -62,18 +64,20 @@ public class atualizarItens implements EventoProgramavelJava {
 	@Override
 	public void afterUpdate(PersistenceEvent arg0) throws Exception {
 
-		if (arg0.getModifingFields().isModifing("QTDE")) {
-			updateItens.atualizarCustoProduto(arg0);
-		}
 		if (arg0.getModifingFields().isModifing("UNID")) {
 			updateItens.atualizarCustoVolume(arg0);
 		}
+
+		if (arg0.getModifingFields().isModifing("QTDE")) {
+			updateItens.atualizarCustoProduto(arg0);
+		}
+
+		Impostos.recalculaImpostos((BigDecimal) arg0.getEntityProperty("CODLIC"));
 
 	}
 
 	@Override
 	public void beforeCommit(TransactionContext arg0) throws Exception {
-		// TODO Auto-generated method stub
 
 	}
 
@@ -102,8 +106,7 @@ public class atualizarItens implements EventoProgramavelJava {
 		}
 
 
-
-
 	}
+
 
 }

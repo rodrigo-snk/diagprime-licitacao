@@ -6,8 +6,11 @@ import br.com.sankhya.jape.dao.JdbcWrapper;
 import br.com.sankhya.jape.event.PersistenceEvent;
 import br.com.sankhya.jape.event.TransactionContext;
 import br.com.sankhya.jape.vo.DynamicVO;
+import br.com.sankhya.jape.vo.EntityVO;
+import br.com.sankhya.modelcore.comercial.impostos.ImpostosHelpper;
 import br.com.sankhya.modelcore.util.EntityFacadeFactory;
 import processamento.Acessorios;
+import processamento.Impostos;
 import processamento.insertItens;
 
 import java.math.BigDecimal;
@@ -22,9 +25,12 @@ public class atualizarAcessorios implements EventoProgramavelJava {
 
     @Override
     public void beforeUpdate(PersistenceEvent arg0) throws Exception {
-        if (arg0.getModifingFields().isModifing("CUSTO") || arg0.getModifingFields().isModifing("MARKUPFATOR")) {
+
+        if (arg0.getModifingFields().isModifing("CUSTO") || arg0.getModifingFields().isModifing("MARKUPFATOR") || arg0.getModifingFields().isModifing("VLRUNIT")) {
             Acessorios.atualizarCustoAcessorio(arg0);
         }
+
+        Impostos.recalculaImpostos((BigDecimal) arg0.getEntityProperty("CODLIC"));
 
     }
 
@@ -36,38 +42,30 @@ public class atualizarAcessorios implements EventoProgramavelJava {
     @Override
     public void afterInsert(PersistenceEvent arg0) throws Exception {
         insertItens.atualizarCusto(arg0);
-        EntityFacade dwfFacade = EntityFacadeFactory.getDWFFacade();
-        JdbcWrapper jdbc = dwfFacade.getJdbcWrapper();
-        jdbc.openSession();
 
-        DynamicVO acessorio = (DynamicVO) arg0.getVo();
-        BigDecimal codLic = acessorio.asBigDecimalOrZero("CODLIC");
-        BigDecimal codLicCom = acessorio.asBigDecimalOrZero("CODLICCOM");
-        BigDecimal codProd = acessorio.asBigDecimalOrZero("CODPROD");
-        BigDecimal qtdNeg = acessorio.asBigDecimalOrZero("QTDNEG");
-        //BigDecimal custo = acessorio.asBigDecimalOrZero("CUSTO");
-        BigDecimal vlrUnit = acessorio.asBigDecimalOrZero("VLRUNIT");
+        DynamicVO acessorioVO = (DynamicVO) arg0.getVo();
+        BigDecimal codLic = acessorioVO.asBigDecimalOrZero("CODLIC");
+        BigDecimal codLicCom = acessorioVO.asBigDecimalOrZero("CODLICCOM");
+        BigDecimal codProd = acessorioVO.asBigDecimalOrZero("CODPROD");
+        BigDecimal qtdNeg = acessorioVO.asBigDecimalOrZero("QTDNEG");
+        //BigDecimal custo = acessorioVO.asBigDecimalOrZero("CUSTO");
+        BigDecimal vlrUnit = acessorioVO.asBigDecimalOrZero("VLRUNIT");
         BigDecimal vlrTot = vlrUnit.multiply(qtdNeg);
-        String codVol = acessorio.asString("CODVOL");
-        BigDecimal markupFator = acessorio.asBigDecimalOrZero("MARKUPFATOR");
+        String codVol = acessorioVO.asString("CODVOL");
+        BigDecimal markupFator = acessorioVO.asBigDecimalOrZero("MARKUPFATOR");
 
-        //throw new Exception(codLic.toString() + " Esse é o codlic");
-        if(!(markupFator.doubleValue()>0)) markupFator = BigDecimal.ONE;
-        if(!(qtdNeg.doubleValue()>0)) qtdNeg = BigDecimal.ONE;
-
-        String sql = "select CODEMP, NUNOTA, CODLIC from AD_LICITACAO where CODLIC="+codLic;
-        PreparedStatement consultaLic = jdbc.getPreparedStatement(sql);
-        ResultSet licitacao = consultaLic.executeQuery();
-
-        BigDecimal nuNota = null;
-        BigDecimal codEmp = null;
-        while (licitacao.next()) {
-            nuNota = licitacao.getBigDecimal("NUNOTA");
-            codEmp = licitacao.getBigDecimal("CODEMP");
+        if (markupFator.compareTo(BigDecimal.ZERO) <= 0) {
+            markupFator = BigDecimal.ONE;
         }
-        Acessorios.salvarAcessoriosDados(nuNota,codProd,qtdNeg, codVol, vlrUnit, vlrTot, codEmp, codLicCom,codLic);
+        if (qtdNeg.compareTo(BigDecimal.ZERO) <= 0) {
+            qtdNeg = BigDecimal.ONE;
+        }
 
-        jdbc.closeSession();
+        DynamicVO licitacaoVO = (DynamicVO) EntityFacadeFactory.getDWFFacade().findEntityByPrimaryKey("AD_LICITACAO", codLic);
+        BigDecimal nuNota = licitacaoVO.asBigDecimalOrZero("NUNOTA");
+        BigDecimal codEmp = licitacaoVO.asBigDecimalOrZero("CODEMP");
+
+        Acessorios.salvarAcessoriosDados(nuNota,codProd,qtdNeg, codVol, vlrUnit, vlrTot, codEmp, codLicCom,codLic);
 
     }
 
@@ -85,4 +83,6 @@ public class atualizarAcessorios implements EventoProgramavelJava {
     public void beforeCommit(TransactionContext arg0) throws Exception {
 
     }
+
+
 }

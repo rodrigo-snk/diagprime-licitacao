@@ -1,6 +1,7 @@
 package processamento;
 
 import java.math.BigDecimal;
+import java.math.MathContext;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
@@ -35,11 +36,10 @@ public class insertItens {
 		String codVol = itemVO.asString("UNID");
 		BigDecimal replicando = (itemVO.asBigDecimalOrZero("REPLICANDO"));
 
-		if(!(markupFator.doubleValue()>0)) {
+		if (markupFator.compareTo(BigDecimal.ZERO) <= 0) {
 			markupFator = BigDecimal.ONE;
 		}
-		
-		if(!(qtdNeg.doubleValue()>0)) {
+		if (qtdNeg.compareTo(BigDecimal.ZERO) <= 0) {
 			qtdNeg = BigDecimal.ONE;
 		}
 
@@ -100,10 +100,10 @@ public class insertItens {
 
 			if (divideOuMultiplica.equalsIgnoreCase("M")) {
 				qtdNeg = qtdNeg.multiply(quantidade);
-				vlrUnit = vlrUnit.divide(quantidade);
+				vlrUnit = vlrUnit.divide(quantidade, MathContext.DECIMAL128);
 			}
 			else if (divideOuMultiplica.equalsIgnoreCase("D")) {
-				qtdNeg = qtdNeg.divide(quantidade);
+				qtdNeg = qtdNeg.divide(quantidade, MathContext.DECIMAL128);
 				vlrUnit = vlrUnit.multiply(quantidade);
 			}
 
@@ -114,7 +114,6 @@ public class insertItens {
 		ImpostosHelpper impostos = new ImpostosHelpper();
 		impostos.setForcarRecalculo(true);
 		impostos.calcularImpostos(nuNota);
-
 
 		salvarDados.insertComponentes(codLic, jdbcWrapper);
 		jdbcWrapper.closeSession();

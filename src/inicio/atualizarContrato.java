@@ -58,14 +58,13 @@ public class atualizarContrato implements EventoProgramavelJava {
 	@Override
 	public void beforeUpdate(PersistenceEvent arg0) throws Exception {
 		// TODO Auto-generated method stub
-		boolean isConfirmandoNota = JapeSession.getPropertyAsBoolean("CabecalhoNota.confirmando.nota", false);		DynamicVO dados = (DynamicVO) arg0.getVo();
-		String status = (dados.asString("STATUSNOTA"));
-		BigDecimal codTipOper = (dados.asBigDecimal("CODTIPOPER"));
+		boolean isConfirmandoNota = JapeSession.getPropertyAsBoolean("CabecalhoNota.confirmando.nota", false);
+		DynamicVO dados = (DynamicVO) arg0.getVo();
+		String status = dados.asString("STATUSNOTA");
+		BigDecimal codTipOper = dados.asBigDecimal("CODTIPOPER");
         
 		/*if(true) {
-			
 			throw new PersistenceException("TESTE status "+status+" confirmando "+confirmando+" nomeEnty"+nomeEnty);
-			
 		}*/
 		//if (arg0.getModifingFields().isModifing("STATUSNOTA")) {
 			if(isConfirmandoNota){

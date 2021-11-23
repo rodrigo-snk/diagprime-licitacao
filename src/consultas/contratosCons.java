@@ -10,7 +10,7 @@ public class contratosCons {
 	}
 	
 	public static String buscarDadosItensContratoComponentes(String nuNota) {
-		return "SELECT  CODPROD, QTDNEG,VLRUNIT FROM AD_LICITACAOCOMPONENTES  WHERE CODLIC IN (select b.CODLIC from AD_LICITACAO b\r\n"
+		return "SELECT CODPROD, QTDNEG,VLRUNIT FROM AD_LICITACAOCOMPONENTES  WHERE CODLIC IN (select b.CODLIC from AD_LICITACAO b\r\n"
 				+ "where b.nunota in (SELECT distinct  a.nunotaorig FROM TGFVAR a inner join \r\n"
 				+ "tgfvar b on  a.nunota = b.nunotaorig inner join \r\n"
 				+ "tgfcab c on c.nunota = b.nunota\r\n"
@@ -57,7 +57,7 @@ public class contratosCons {
 				+ "tgfcab where codtipoper in (SELECT TOP.codtipoper  FROM TGFTOP TOP INNER JOIN\r\n"
 				+ "					(select max(dhalter) as data,codtipoper from tgftop  group by codtipoper)TIPOPER ON \r\n"
 				+ "					TOP.CODTIPOPER = TIPOPER.CODTIPOPER AND TOP.dhalter = TIPOPER.data\r\n"
-				+ "					WHERE  AD_LICITACAO = 'S') \r\n"
+				+ "					WHERE AD_LICITACAO = 'S') \r\n"
 				+ "					and nunota = "+nuNota;
 	}
 

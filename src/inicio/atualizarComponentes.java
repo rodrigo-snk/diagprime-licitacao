@@ -28,6 +28,7 @@ public class atualizarComponentes implements EventoProgramavelJava {
 	public void beforeCommit(TransactionContext arg0) throws Exception {
 		// TODO Auto-generated method stub
 
+
 	}
 
 	@Override

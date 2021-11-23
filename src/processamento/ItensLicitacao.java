@@ -12,7 +12,7 @@ import java.sql.PreparedStatement;
 
 public class ItensLicitacao {
 
-    public static void atualizaItemLicitacao(Object codLic, Object codIteLic, BigDecimal vlrUnit, BigDecimal vlrTotal, BigDecimal markupFator) throws MGEModelException {
+    public static void atualizaItemLicitacao(Object codLic, Object codIteLic, BigDecimal vlrUnit, BigDecimal vlrTotal, BigDecimal markupFator, BigDecimal custo) throws MGEModelException {
         JapeSession.SessionHandle hnd = null;
         try {
             hnd = JapeSession.open();
@@ -20,6 +20,7 @@ public class ItensLicitacao {
                     prepareToUpdateByPK(codLic, codIteLic)
                     .set("VLRUNIT", vlrUnit)
                     .set("VLRTOTAL", vlrTotal)
+                    .set("CUSTO", custo)
                     .set("MARKUPFATOR", markupFator)
                     .update();
         } catch (Exception e) {

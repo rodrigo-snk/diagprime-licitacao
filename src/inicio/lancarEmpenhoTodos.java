@@ -48,19 +48,15 @@ public class lancarEmpenhoTodos implements AcaoRotinaJava {
 			}
 			//arg0.mostraErro(" qtdDisponivel "+qtdDisponivel+" - "+qtd);
 
-		//arg0.mostraErro(qtdDisponivel+" - "+qtd);
+			//arg0.mostraErro(qtdDisponivel+" - "+qtd);
 
-	
 			
 			String consulta = consultasDados.retornoValidaEmpenho();
 			PreparedStatement  updateValidando = jdbcWrapper.getPreparedStatement(consulta);
 	  		ResultSet consultaValidando = updateValidando.executeQuery();
  			 
 	  	    if(consultaValidando.next()) {
-	  	    	
-	  	 
-		
-	  	    		empenhoFuncionalidades.liberarEmpenhoTodos(arg0, new BigDecimal(numContrato), empenho);
+				  empenhoFuncionalidades.liberarEmpenhoTodos(arg0, new BigDecimal(numContrato), empenho);
 		 
 	  	    	/*EntityFacade dwf,
 	    		ContextoAcao arg0,

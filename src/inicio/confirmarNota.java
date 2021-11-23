@@ -9,10 +9,15 @@ import br.com.sankhya.extensions.actionbutton.ContextoAcao;
 import br.com.sankhya.extensions.actionbutton.Registro;
 import br.com.sankhya.modelcore.auth.AuthenticationInfo;
 import br.com.sankhya.modelcore.comercial.BarramentoRegra;
+import br.com.sankhya.modelcore.comercial.ComercialUtils;
 import br.com.sankhya.modelcore.comercial.ConfirmacaoNotaHelper;
 import br.com.sankhya.modelcore.comercial.CentralFaturamento.ConfiguracaoFaturamento;
 import br.com.sankhya.modelcore.comercial.centrais.CACHelper;
+import br.com.sankhya.modelcore.dwfdata.vo.CabecalhoNotaVO;
+import br.com.sankhya.modelcore.util.DynamicEntityNames;
+import br.com.sankhya.modelcore.util.EntityFacadeFactory;
 import br.com.sankhya.ws.ServiceContext;
+import processamento.Impostos;
 
 public class confirmarNota implements AcaoRotinaJava {
 
@@ -21,7 +26,8 @@ public class confirmarNota implements AcaoRotinaJava {
 
 		Registro[] linhas = arg0.getLinhas();
 		
-		String nuNota = "";
+		BigDecimal nuNota;
+		String msg = "";
 		//EntityFacade dwf = EntityFacadeFactory.getDWFFacade();
 	/*	JdbcWrapper jdbcWrapper = dwf.getJdbcWrapper();
 		jdbcWrapper.openSession();
@@ -29,26 +35,43 @@ public class confirmarNota implements AcaoRotinaJava {
 		String chave = "";
 		for (Registro linha : linhas) {
 
-			nuNota += linha.getCampo("NUNOTA");
+			nuNota = (BigDecimal) linha.getCampo("NUNOTA");
 
-			Collection<BigDecimal> numNota = new ArrayList<>();
+			Impostos.recalculaImpostos((BigDecimal) linha.getCampo("CODLIC"));
+
+			/*Collection<BigDecimal> numNota = new ArrayList<>();
 			Map<BigDecimal, BigDecimal> mapas = null;
-			numNota.add(new BigDecimal(nuNota));
+			numNota.add(new BigDecimal(nuNota));*/
 
-			BarramentoRegra regra = BarramentoRegra.build(CACHelper.class, "regrasConfirmacaoCAC.xml", AuthenticationInfo.getCurrent());
-			ConfirmacaoNotaHelper.confirmarNota(new BigDecimal(nuNota), regra, true);
-			ConfiguracaoFaturamento fat = new ConfiguracaoFaturamento();
-			fat.setFaturamentoNormal(true);
-			fat.setCodTipOper(new BigDecimal("1007"));
+			CabecalhoNotaVO cabVO = (CabecalhoNotaVO) EntityFacadeFactory.getDWFFacade().findEntityByPrimaryKeyAsVO(DynamicEntityNames.CABECALHO_NOTA, nuNota, CabecalhoNotaVO.class);
+			if (!cabVO.getSTATUSNOTA().equalsIgnoreCase("L")) {
 
-			ServiceContext textoNovo = ServiceContext.getCurrent();
-			chave = textoNovo.getHttpSessionId();
+				BarramentoRegra regra = BarramentoRegra.build(CACHelper.class, "regrasConfirmacaoCAC.xml", AuthenticationInfo.getCurrent());
+				ConfirmacaoNotaHelper.confirmarNota(nuNota, regra, true);
+				ConfiguracaoFaturamento fat = new ConfiguracaoFaturamento();
+				fat.setFaturamentoNormal(true);
+				fat.setCodTipOper(new BigDecimal("1007"));
+
+				ServiceContext textoNovo = ServiceContext.getCurrent();
+				chave = textoNovo.getHttpSessionId();
+
+				msg = "Licitação Aprovada !";
+
+			} else {
+
+				Impostos.recalculaImpostos((BigDecimal) linha.getCampo("CODLIC"));
+				msg = "Impostos recalculados";
+			}
+
+
 			//hnd = JapeSession.getCurrentSession().getTopMostHandle();
 			//FaturamentoHelper.faturar(textoNovo, hnd, fat, numNota, mapas);
 			//JapeSession.close(hnd);
 
 		}
-		arg0.setMensagemRetorno("Licita��o Aprovada !"+chave);
+
+
+		arg0.setMensagemRetorno(msg);
 		
 	}
 

@@ -12,9 +12,14 @@ import br.com.sankhya.modelcore.comercial.impostos.ImpostosHelpper;
 import br.com.sankhya.modelcore.dwfdata.vo.CabecalhoNotaVO;
 import br.com.sankhya.modelcore.dwfdata.vo.ItemNotaVO;
 import br.com.sankhya.modelcore.util.EntityFacadeFactory;
+import com.hazelcast.org.apache.calcite.avatica.proto.Requests;
+import com.hazelcast.org.apache.calcite.prepare.Prepare;
+import oracle.jdbc.proxy.annotation.Pre;
+import org.h2.command.Prepared;
 
 import javax.mail.FetchProfile;
 import java.math.BigDecimal;
+import java.math.MathContext;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -144,14 +149,24 @@ public class Acessorios {
             jdbcWrapper.openSession();
 
             DynamicVO acessorioVO = (DynamicVO) arg0.getVo();
-            BigDecimal custo = acessorioVO.asBigDecimalOrZero("CUSTO");
-            BigDecimal markUpFator = acessorioVO.asBigDecimalOrZero("MARKUPFATOR");
             BigDecimal codLic = acessorioVO.asBigDecimalOrZero("CODLIC");
             BigDecimal codLicCom = acessorioVO.asBigDecimalOrZero("CODLICCOM");
-            BigDecimal vlrUnit = custo.multiply(markUpFator);
+            BigDecimal custo = acessorioVO.asBigDecimalOrZero("CUSTO");
+            BigDecimal vlrUnit = acessorioVO.asBigDecimalOrZero("VLRUNIT");
+            BigDecimal markUpFator = acessorioVO.asBigDecimalOrZero("MARKUPFATOR");
+             if (!arg0.getModifingFields().isModifing("MARKUPFATOR") && !arg0.getModifingFields().isModifing("CUSTO") ) {
+                markUpFator = vlrUnit.divide(custo, MathContext.DECIMAL128);
+            }
+            if (!arg0.getModifingFields().isModifing("VLRUNIT")) {
+                vlrUnit = custo.multiply(markUpFator);
+            } else {
+                vlrUnit = acessorioVO.asBigDecimalOrZero("VLRUNIT");
+            }
             BigDecimal vlrTot = vlrUnit.multiply(acessorioVO.asBigDecimalOrZero("QTDNEG"));
 
-            final String sql = "UPDATE AD_LICITACAOCOMPONENTES SET VLRUNIT = "+vlrUnit+" where CODLIC="+codLic+" AND CODLICCOM =" +codLicCom;
+            //dwf.saveEntity("AD_LICITACAOCOMPONENTES", (EntityVO) acessorioVO);
+
+            final String sql = "UPDATE AD_LICITACAOCOMPONENTES SET VLRUNIT = "+vlrUnit+", MARKUPFATOR = "+markUpFator+", CUSTO = "+custo+" where CODLIC="+codLic+" AND CODLICCOM =" +codLicCom;
             PreparedStatement updateAcessorio = jdbcWrapper.getPreparedStatement(sql);
             updateAcessorio.executeUpdate();
             final String sql2 = "UPDATE TGFITE SET VLRUNIT = "+vlrUnit+", VLRTOT = "+vlrTot+" where AD_CODLIC="+codLic+" AND AD_CODLICCOM =" +codLicCom;
