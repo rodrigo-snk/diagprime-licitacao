@@ -27,23 +27,20 @@ public class validarEmpenho implements EventoProgramavelJava {
 	@Override
 	public void afterUpdate(PersistenceEvent arg0) throws Exception {
 
-		EntityFacade dwf = EntityFacadeFactory.getDWFFacade();
-		JdbcWrapper jdbcWrapper = dwf.getJdbcWrapper();
+		JdbcWrapper jdbcWrapper = EntityFacadeFactory.getDWFFacade().getJdbcWrapper();
 		jdbcWrapper.openSession();
-		
-		
+
 		DynamicVO dados = (DynamicVO) arg0.getVo();
 		BigDecimal codProd = (dados.asBigDecimalOrZero("CODPROD"));
-		BigDecimal QTDLIBERAR = (dados.asBigDecimalOrZero("QTDLIBERAR"));
-		BigDecimal AD_DISPONIVEL = (dados.asBigDecimalOrZero("AD_DISPONIVEL"));
-		BigDecimal DIFERENCA = AD_DISPONIVEL.subtract(QTDLIBERAR);
+		BigDecimal qtdliberar = (dados.asBigDecimalOrZero("QTDLIBERAR"));
+		BigDecimal adDisponivel = (dados.asBigDecimalOrZero("AD_DISPONIVEL"));
+		BigDecimal diferenca = adDisponivel.subtract(qtdliberar);
         
-		if((DIFERENCA.intValue())<0) {
-			
+		if((diferenca.intValue())<0) {
 			throw new Exception("Quantidade digitada não pode ser maior que a disponivel ! Cód. Prod :"+codProd);
-			
 		}
 
+		jdbcWrapper.closeSession();
 	}
 
 	@Override

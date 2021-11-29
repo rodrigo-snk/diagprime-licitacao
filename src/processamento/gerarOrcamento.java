@@ -10,9 +10,7 @@ import save.salvarDadosEmpenho;
 
 public class gerarOrcamento {
 
-	
-	
-	public static void atualizandoContrato(BigDecimal nuNota,BigDecimal numContrato,Integer codEmp,Integer codNat) throws Exception {
+	public static void atualizandoContrato(BigDecimal nuNota, BigDecimal numContrato, BigDecimal codEmp,BigDecimal codNat) throws Exception {
 		
 		EntityFacade dwf = EntityFacadeFactory.getDWFFacade();
 		JdbcWrapper jdbcWrapper = dwf.getJdbcWrapper();
@@ -21,7 +19,7 @@ public class gerarOrcamento {
 		if(numContrato.intValue()>0) {
 		String selectItens = "select cab.CODPARC,AD_QTDLIBERAR,\r\n"
 				+ "CAB.NUMCONTRATO AS P_CONTRATO,\r\n"
-				+ "ITE.CODPROD,\r\n"
+				+ "ITE.CODPROD, ITE.CODVOL\r\n"
 				+ "coalesce(itecontrato.CODPROD,0) AS CODPROD_CONTRATO,\r\n"
 				+ "'A' AS SITPROD,\r\n"
 				+ "ite.QTDNEG+COALESCE(QTDEPREVISTA,0) AS QTDEPREVISTA_NOVO,\r\n"
@@ -39,60 +37,54 @@ public class gerarOrcamento {
 						+ "					WHERE  ad_GERAR_CONTRATO = 'S') and total>1";
 		
 		
-		 
-		  PreparedStatement  selectConta = jdbcWrapper.getPreparedStatement(selectItens);
-		  ResultSet consulta = selectConta.executeQuery();
-		
-		  	while (consulta.next()) {
-		
-		  		
-		  		int codProd = consulta.getInt("CODPROD_CONTRATO");
-		  		int codProd1 = consulta.getInt("CODPROD");
-		  		String qtdPrevistaNovo = consulta.getString("QTDEPREVISTA_NOVO");
-		  		String AD_QTDLIBERAR = consulta.getString("AD_QTDLIBERAR");
-		  		String CODPARC = consulta.getString("CODPARC");
-		  		String qtdNeg = consulta.getString("QTDNEG");
-		  		String vlrUnit = consulta.getString("VLRUNIT");
+		PreparedStatement pstmt = jdbcWrapper.getPreparedStatement(selectItens);
+		ResultSet rs = pstmt.executeQuery();
+		  	while (rs.next()) {
+
+		  		BigDecimal codProd = rs.getBigDecimal("CODPROD_CONTRATO");
+		  		BigDecimal codProd1 = rs.getBigDecimal("CODPROD");
+				String codVol = rs.getString("CODVOL");
+				BigDecimal qtdPrevistaNovo = rs.getBigDecimal("QTDEPREVISTA_NOVO");
+		  		BigDecimal AD_QTDLIBERAR = rs.getBigDecimal("AD_QTDLIBERAR");
+		  		BigDecimal codParc = rs.getBigDecimal("CODPARC");
+		  		BigDecimal qtdNeg = rs.getBigDecimal("QTDNEG");
+		  		BigDecimal vlrUnit = rs.getBigDecimal("VLRUNIT");
 		  		
 		  		String validando = "SELECT * FROM LOG_UPDATE_CONTRATO WHERE NUNOTA = '"+nuNota+"' and CODPROD = "+codProd1;
-		  		PreparedStatement  updateValidando = jdbcWrapper.getPreparedStatement(validando);
-		  		 ResultSet consultaValidando = updateValidando.executeQuery();
+		  		pstmt = jdbcWrapper.getPreparedStatement(validando);
+		  		rs = pstmt.executeQuery();
 	  			 
-		  	    if(consultaValidando.next()) {
+		  	    if (rs.next()) {
 		  	    	
 		  	    }else{
-		  		if(codProd > 0) {
-		  			
-		  			
-		  			 String updateCodProd = "update TCSPSC set QTDEPREVISTA="+qtdPrevistaNovo+" where codprod="+codProd1+" and numcontrato="+numContrato;
-		  			 PreparedStatement  update = jdbcWrapper.getPreparedStatement(updateCodProd);
-		  			 update.executeUpdate();
+		  		if (codProd.compareTo(BigDecimal.ZERO) > 0) {
+
+		  			 final String updateCodProd = "update TCSPSC set QTDEPREVISTA="+qtdPrevistaNovo+" where codprod="+codProd1+" and numcontrato="+numContrato;
+					 pstmt = jdbcWrapper.getPreparedStatement(updateCodProd);
+		  			 pstmt.executeUpdate();
 		  			 
-		  			 String updateCodProd1 = "update AD_ITENSEMPENHO set QTDDISPONIVEL="+qtdPrevistaNovo+",AD_DISPONIVEL="+qtdPrevistaNovo+" where codprod="+codProd1+" and numcontrato="+numContrato;
-		  			 PreparedStatement  update1 = jdbcWrapper.getPreparedStatement(updateCodProd1);
-		  			update1.executeUpdate();
-		
+		  			 final String updateCodProd1 = "update AD_ITENSEMPENHO set QTDDISPONIVEL="+qtdPrevistaNovo+",AD_DISPONIVEL="+qtdPrevistaNovo+" where codprod="+codProd1+" and numcontrato="+numContrato;
+					 pstmt = jdbcWrapper.getPreparedStatement(updateCodProd1);
+		  			 pstmt.executeUpdate();
 		  			
-		  			}else{
+		  			} else{
 		  				
-		  			 String insertCodProd = " insert into  TCSPSC  (NUMCONTRATO, CODPROD, SITPROD,QTDEPREVISTA,VLRUNIT,DTALTER) \r\n"
+		  			 final String insertCodProd = "insert into TCSPSC (NUMCONTRATO, CODPROD, SITPROD,QTDEPREVISTA,VLRUNIT,DTALTER) \r\n"
 		  			 		+ "  values ("+numContrato+", "+codProd1+", 'A',"+qtdNeg+","+vlrUnit+", SYSDATE)";
-		  			 PreparedStatement  update = jdbcWrapper.getPreparedStatement(insertCodProd);
-		  			 update.executeUpdate();
+					 pstmt = jdbcWrapper.getPreparedStatement(insertCodProd);
+		  			 pstmt.executeUpdate();
 		  	  
 		  			salvarDadosEmpenho.gerarEmpenho(
 		  					dwf, 
-		  					new BigDecimal(codProd1+""), 
+		  					codProd1,
+							codVol,
 		  					numContrato, 
-		  					new BigDecimal(CODPARC),
-		  					new BigDecimal(qtdNeg), 
-		  					new BigDecimal(qtdNeg), 
+		  					codParc,
+		  					qtdNeg,
+		  					qtdNeg,
 		  					"", 
-		  					new BigDecimal(qtdNeg)
+		  					qtdNeg
 		  					);
-
-		    		
-		    		
 		  		}
 		  		
 		  	//	String del = "DELETE FROM TCSOCC WHERE NUMCONTRATO ="+numContrato+" AND CODPROD ="+codProd1+" AND DTOCOR = TRUNC(SYSDATE)";
@@ -104,9 +96,9 @@ public class gerarOrcamento {
 		  	// 	 PreparedStatement  insert1 = jdbcWrapper.getPreparedStatement(insert);
 		  	// 	 insert1.executeUpdate();
 		  	 	 
-		  	 	 String insertValidando = "INSERT INTO LOG_UPDATE_CONTRATO(NUNOTA,CODPROD,QTD) VALUES ('"+nuNota+"','"+codProd1+"','"+qtdNeg+"')";
-		  	 	 PreparedStatement  insertValidando1 = jdbcWrapper.getPreparedStatement(insertValidando);
-		  	 	insertValidando1.executeUpdate();
+		  	 	 final String insertValidando = "INSERT INTO LOG_UPDATE_CONTRATO(NUNOTA,CODPROD,QTD) VALUES ('"+nuNota+"','"+codProd1+"','"+qtdNeg+"')";
+				 pstmt = jdbcWrapper.getPreparedStatement(insertValidando);
+		  	 	 pstmt.executeUpdate();
 		  	 
 		  	}
 		  	}

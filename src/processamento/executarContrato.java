@@ -16,93 +16,86 @@ import save.salvarDadosEmpenho;
 
 
 public class executarContrato {
-	
-	
+
 	public static void executarContratosConfirmar(PersistenceEvent arg0) throws Exception {
 		
-		DynamicVO dados = (DynamicVO) arg0.getVo();
+		DynamicVO cabVO = (DynamicVO) arg0.getVo();
 		EntityFacade dwf = EntityFacadeFactory.getDWFFacade();
 		JdbcWrapper jdbcWrapper = dwf.getJdbcWrapper();
 		jdbcWrapper.openSession();
 		
-		BigDecimal nuNota = (dados.asBigDecimalOrZero("NUNOTA"));
-		BigDecimal numContrato1 = (dados.asBigDecimalOrZero("NUMCONTRATO"));
-		Integer codEmp = (dados.asInt("CODEMP"));
-		Integer codNat = (dados.asInt("CODNAT"));
-		Integer codParc = (dados.asInt("CODPARC"));
-		Integer codContato = (dados.asInt("CODCONTATO"));
-		Integer codTipVenda = (dados.asInt("CODTIPVENDA"));
-		BigDecimal codTipOper = (dados.asBigDecimalOrZero("CODTIPOPER"));
+		BigDecimal nuNota = cabVO.asBigDecimalOrZero("NUNOTA");
+		BigDecimal numContrato1 = cabVO.asBigDecimalOrZero("NUMCONTRATO");
+		BigDecimal codEmp = cabVO.asBigDecimalOrZero("CODEMP");
+		BigDecimal codNat = cabVO.asBigDecimalOrZero("CODNAT");
+		BigDecimal codParc = cabVO.asBigDecimalOrZero("CODPARC");
+		BigDecimal codContato = cabVO.asBigDecimalOrZero("CODCONTATO");
+		BigDecimal codTipVenda = cabVO.asBigDecimalOrZero("CODTIPVENDA");
+		BigDecimal codTipOper = cabVO.asBigDecimalOrZero("CODTIPOPER");
 		BigDecimal AD_CODTIPOPERDESTINO = new BigDecimal(0);
 		
-		String consultaTopDest = contratosCons.retornaTop(codTipOper+"");
-		PreparedStatement  updateValidando = jdbcWrapper.getPreparedStatement(consultaTopDest);
-  		ResultSet consultaValidando = updateValidando.executeQuery();
+		final String consultaTopDest = contratosCons.retornaTop(codTipOper.toString());
+		PreparedStatement pstmt = jdbcWrapper.getPreparedStatement(consultaTopDest);
+  		ResultSet rs = pstmt.executeQuery();
 			 
-  	    while(consultaValidando.next()) {
-  	    	AD_CODTIPOPERDESTINO = consultaValidando.getBigDecimal("AD_CODTIPOPERDESTINO");
+  	    while(rs.next()) {
+  	    	AD_CODTIPOPERDESTINO = rs.getBigDecimal("AD_CODTIPOPERDESTINO");
   	    }
   	    if(AD_CODTIPOPERDESTINO.intValue()>0) {
 		if(numContrato1.intValue()>0) {
 			
 			gerarOrcamento.atualizandoContrato(nuNota, numContrato1, codEmp, codNat);
 
-		}else{
+		} else {
 			
 		BigDecimal numContrato = contratos.salvarContrato(
 				dwf, 
-				codEmp+"",
-				codParc+"",
-				codContato+"",
-				codTipVenda+"",
-				codNat+"",
-				AD_CODTIPOPERDESTINO+"",
-				nuNota+"");
+				codEmp,
+				codParc,
+				codContato,
+				codTipVenda,
+				codNat,
+				AD_CODTIPOPERDESTINO,
+				nuNota);
 		
 
-		String sql = contratosCons.buscarDadosItensContrato(nuNota+"");
-		PreparedStatement  selectConta = jdbcWrapper.getPreparedStatement(sql);
-		ResultSet consulta = selectConta.executeQuery();
+		final String sql = contratosCons.buscarDadosItensContrato(nuNota.toString());
+		pstmt = jdbcWrapper.getPreparedStatement(sql);
+		rs = pstmt.executeQuery();
 
-		  	while (consulta.next()) {
+		  	while (rs.next()) {
+		  		BigDecimal codProd = rs.getBigDecimal("CODPROD");
+		  		BigDecimal qtdNeg = rs.getBigDecimal("QTDNEG");
+		  		BigDecimal vlrUnit = rs.getBigDecimal("VLRUNIT");
+		  		String codVol = rs.getString("CODVOL");
+
+				contratos.salvarContratoItens(dwf, numContrato, codProd, qtdNeg, vlrUnit);
 		  		
-		  		String codProd = consulta.getString("CODPROD");
-		  		String qtdNeg = consulta.getString("QTDNEG");
-		  		String vlrUnit = consulta.getString("VLRUNIT");
-		  		
-		  		contratos.salvarContratoItens(
-				dwf, 
-				numContrato+"",
-				codProd, 
-				qtdNeg, 
-				vlrUnit);
-		  		
-				String insertValidando = "INSERT INTO LOG_UPDATE_CONTRATO(NUNOTA,CODPROD,QTD) VALUES ('"+nuNota+"','"+codProd+"','"+qtdNeg+"')";
-		  	 	PreparedStatement  insertValidando1 = jdbcWrapper.getPreparedStatement(insertValidando);
-		  	 	insertValidando1.executeUpdate();
+				final String insertValidando = "INSERT INTO LOG_UPDATE_CONTRATO(NUNOTA,CODPROD,QTD) VALUES ('"+nuNota+"','"+codProd+"','"+qtdNeg+"')";
+		  	 	pstmt = jdbcWrapper.getPreparedStatement(insertValidando);
+		  	 	pstmt.executeUpdate();
 		  	 	
 	  			salvarDadosEmpenho.gerarEmpenho(
 	  					dwf, 
-	  					new BigDecimal(codProd+""), 
+	  					codProd,
+						codVol,
 	  					numContrato, 
-	  					new BigDecimal(codParc+""),
-	  					new BigDecimal(qtdNeg), 
-	  					new BigDecimal(qtdNeg), 
+	  					codParc,
+	  					qtdNeg,
+	  					qtdNeg,
 	  					"", 
-	  					new BigDecimal(qtdNeg)
+	  					qtdNeg
 	  					);
-		  	 	
 		  		}
 		  	
-			String sql1 = contratosCons.buscarDadosItensContratoComponentes(nuNota+"");
-			PreparedStatement selectConta1 = jdbcWrapper.getPreparedStatement(sql1);
-			ResultSet consulta1 = selectConta1.executeQuery();
+			final String sql1 = contratosCons.buscarDadosItensContratoComponentes(nuNota.toString());
+			pstmt = jdbcWrapper.getPreparedStatement(sql1);
+			rs = pstmt.executeQuery();
 
-			  	while (consulta1.next()) {
-			  		
-			  		String codProd = consulta1.getString("CODPROD");
-			  		String qtdNeg = consulta1.getString("QTDNEG");
-			  		String vlrUnit = consulta1.getString("VLRUNIT");
+			  	while (rs.next()) {
+			  		String codProd = rs.getString("CODPROD");
+			  		String qtdNeg = rs.getString("QTDNEG");
+			  		String vlrUnit = rs.getString("VLRUNIT");
 					  // Componentes já estao no Contrato
 			  		/*contratos.salvarContratoItens(
 					dwf, 
@@ -112,8 +105,8 @@ public class executarContrato {
 					vlrUnit);*/
 			  		
 					String insertValidando = "INSERT INTO LOG_UPDATE_CONTRATO(NUNOTA,CODPROD,QTD) VALUES ('"+nuNota+"','"+codProd+"','"+qtdNeg+"')";
-			  	 	PreparedStatement insertValidando1 = jdbcWrapper.getPreparedStatement(insertValidando);
-			  	 	insertValidando1.executeUpdate();
+			  	 	pstmt = jdbcWrapper.getPreparedStatement(insertValidando);
+			  	 	pstmt.executeUpdate();
 
 					// Componentes já estao no Contrato
 		  			/*salvarDadosEmpenho.gerarEmpenho(
@@ -129,9 +122,9 @@ public class executarContrato {
 			  	 	
 			  		}
 		  	
-			String insertValidando = "UPDATE TGFCAB SET NUMCONTRATO = "+numContrato+" where nunota = "+nuNota;
-	  	 	PreparedStatement insertValidando1 = jdbcWrapper.getPreparedStatement(insertValidando);
-	  	 	insertValidando1.executeUpdate();
+			final String sql2 = "UPDATE TGFCAB SET NUMCONTRATO = "+numContrato+" where NUNOTA = "+nuNota;
+	  	 	pstmt = jdbcWrapper.getPreparedStatement(sql);
+	  	 	pstmt.executeUpdate();
 	
 		
 		}

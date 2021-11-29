@@ -5,24 +5,24 @@ import java.math.BigDecimal;
 public class contratosCons {
 
 	public static String buscarDadosItensContrato(String nuNota) {
-		return "SELECT  CODPROD, QTDNEG,VLRUNIT\r\n"
+		return "SELECT CODPROD, QTDNEG, VLRUNIT, CODVOL\r\n"
 				+ "FROM TGFITE WHERE NUNOTA = "+nuNota;
 	}
 	
 	public static String buscarDadosItensContratoComponentes(String nuNota) {
-		return "SELECT CODPROD, QTDNEG,VLRUNIT FROM AD_LICITACAOCOMPONENTES  WHERE CODLIC IN (select b.CODLIC from AD_LICITACAO b\r\n"
+		return "SELECT CODPROD,QTDNEG,VLRUNIT,CODVOL FROM AD_LICITACAOCOMPONENTES WHERE CODLIC IN (select b.CODLIC from AD_LICITACAO b\r\n"
 				+ "where b.nunota in (SELECT distinct  a.nunotaorig FROM TGFVAR a inner join \r\n"
 				+ "tgfvar b on  a.nunota = b.nunotaorig inner join \r\n"
 				+ "tgfcab c on c.nunota = b.nunota\r\n"
 				+ "where c.nunota = "+nuNota+"))";
 	}
 	
-	public static String buscarDadosResumo(String nuNota) {
+	public static String buscarDadosResumo(BigDecimal nuNota) {
 		return  "select NUMERO  from AD_LICITACAO b \r\n"
 				+ "	where b.nunota in (SELECT distinct  a.nunotaorig FROM TGFVAR a inner join \r\n"
 				+ "	tgfvar b on  a.nunota = b.nunotaorig inner join \r\n"
 				+ "	tgfcab c on c.nunota = b.nunota\r\n"
-				+ "	where  c.NUNOTA="+nuNota+") ";
+				+ "	where  c.NUNOTA="+nuNota.toString()+") ";
 	}
 
 	

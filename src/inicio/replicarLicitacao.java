@@ -26,20 +26,19 @@ public class replicarLicitacao implements AcaoRotinaJava {
 		jdbcWrapper.openSession();
 		Registro[] registros = arg0.getLinhas();
 		Integer usuario = Integer.parseInt(""+arg0.getUsuarioLogado());
-		BigDecimal CODLIC = null;
-		
-		for (Integer i = 0; i < registros.length; i++) {
-			
-			CODLIC = (BigDecimal) registros[i].getCampo("CODLIC");
-			BigDecimal CODITELIC = (BigDecimal) registros[i].getCampo("CODITELIC");
-			BigDecimal CODPROD = (BigDecimal) registros[i].getCampo("CODPROD");
-			BigDecimal QTDE = (BigDecimal) registros[i].getCampo("QTDE");
-			BigDecimal VLRTOTAL = (BigDecimal) registros[i].getCampo("VLRTOTAL");
-			BigDecimal VLRUNIT = (BigDecimal) registros[i].getCampo("VLRUNIT");
-			BigDecimal MARKUPFATOR = (BigDecimal) registros[i].getCampo("MARKUPFATOR");
-			String CODVOL = ""+registros[i].getCampo("UNID");
-			
-			
+		BigDecimal codLic = null;
+
+		for (Registro registro : registros) {
+
+			codLic = (BigDecimal) registro.getCampo("CODLIC");
+			BigDecimal codIteLic = (BigDecimal) registro.getCampo("CODITELIC");
+			BigDecimal codProd = (BigDecimal) registro.getCampo("CODPROD");
+			BigDecimal qtde = (BigDecimal) registro.getCampo("QTDE");
+			BigDecimal vlrTotal = (BigDecimal) registro.getCampo("VLRTOTAL");
+			BigDecimal vlrUnit = (BigDecimal) registro.getCampo("VLRUNIT");
+			BigDecimal markUpFator = (BigDecimal) registro.getCampo("MARKUPFATOR");
+			String codVol = (String) registro.getCampo("UNID");
+
 			/*recalcularItens.atualizarCusto(
 					CODITELIC, 
 					CODLIC, 
@@ -53,28 +52,28 @@ public class replicarLicitacao implements AcaoRotinaJava {
 		}
 		
 		JapeWrapper financeiroDAO = JapeFactory.dao("AD_LICITACAO");
-		DynamicVO financeiroVO = financeiroDAO.findOne("CODLIC = ?", CODLIC);
+		DynamicVO financeiroVO = financeiroDAO.findOne("CODLIC = ?", codLic);
 		Map<String, Object> fieldsFin = new HashMap<>();
-		fieldsFin.put("NUNOTA", new BigDecimal(0));
+		fieldsFin.put("NUNOTA", BigDecimal.ZERO);
 		
 		Map<String, Object> PK = util.CentralNotasUtils.duplicaRegistro(financeiroVO, "AD_LICITACAO", fieldsFin);
 		BigDecimal codLicNovo = (BigDecimal) PK.get("CODLIC");
 
 		JapeWrapper licitacaoDAO = JapeFactory.dao("AD_ITENSLICITACAO");
 		
-		String sql = "select CODITELIC from AD_ITENSLICITACAO where codlic="+CODLIC;
-		PreparedStatement  consultaValidando2 = jdbcWrapper.getPreparedStatement(sql);
-		ResultSet rset = consultaValidando2.executeQuery();
+		String sql = "select CODITELIC from AD_ITENSLICITACAO where codlic="+codLic;
+		PreparedStatement pstmt = jdbcWrapper.getPreparedStatement(sql);
+		ResultSet rs = pstmt.executeQuery();
 
-		while(rset.next()){
+		while(rs.next()){
 			
-		BigDecimal CODITELIC = rset.getBigDecimal("CODITELIC");
-		DynamicVO licitacaoVO = licitacaoDAO.findOne("CODLIC = ? AND CODITELIC="+CODITELIC, CODLIC);
+		BigDecimal codIteLic = rs.getBigDecimal("CODITELIC");
+		DynamicVO licitacaoVO = licitacaoDAO.findOne("CODLIC = ? AND CODITELIC="+codIteLic, codLic);
 		Map<String, Object> licitacaoFin = new HashMap<>();
 		licitacaoFin.put("CODLIC", codLicNovo);
 		licitacaoFin.put("REPLICANDO", new BigDecimal(1));
-		licitacaoFin.put("CODITELIC_ANTERIOR", CODITELIC);
-		licitacaoFin.put("CODLIC_ANTERIOR", CODLIC);
+		licitacaoFin.put("CODITELIC_ANTERIOR", codIteLic);
+		licitacaoFin.put("CODLIC_ANTERIOR", codLic);
 		
 		Map<String, Object> PK1 = util.CentralNotasUtils.duplicaRegistro(licitacaoVO, "AD_ITENSLICITACAO", licitacaoFin);
 		//BigDecimal codLicNovo = (BigDecimal) PK1.get("CODLIC");

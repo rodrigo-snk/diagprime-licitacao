@@ -57,28 +57,27 @@ public class atualizarContrato implements EventoProgramavelJava {
 
 	@Override
 	public void beforeUpdate(PersistenceEvent arg0) throws Exception {
-		// TODO Auto-generated method stub
 		boolean isConfirmandoNota = JapeSession.getPropertyAsBoolean("CabecalhoNota.confirmando.nota", false);
-		DynamicVO dados = (DynamicVO) arg0.getVo();
-		String status = dados.asString("STATUSNOTA");
-		BigDecimal codTipOper = dados.asBigDecimal("CODTIPOPER");
+		DynamicVO cabVO = (DynamicVO) arg0.getVo();
+		String status = cabVO.asString("STATUSNOTA");
+		BigDecimal codTipOper = cabVO.asBigDecimal("CODTIPOPER");
         
 		/*if(true) {
 			throw new PersistenceException("TESTE status "+status+" confirmando "+confirmando+" nomeEnty"+nomeEnty);
 		}*/
 		//if (arg0.getModifingFields().isModifing("STATUSNOTA")) {
-			if(isConfirmandoNota){
-				if(status.equalsIgnoreCase("A")){
+			if (isConfirmandoNota) {
+				if (status.equalsIgnoreCase("A")) {
 					
 					EntityFacade dwf = EntityFacadeFactory.getDWFFacade();
 					JdbcWrapper jdbcWrapper = dwf.getJdbcWrapper();
 					jdbcWrapper.openSession();
 					
-					String sql = contratosCons.retornaTopValida(codTipOper+"");
-					PreparedStatement  updateValidando = jdbcWrapper.getPreparedStatement(sql);
-			  		ResultSet consultaValidando = updateValidando.executeQuery();
+					String sql = contratosCons.retornaTopValida(codTipOper.toString());
+					PreparedStatement pstmt = jdbcWrapper.getPreparedStatement(sql);
+			  		ResultSet rs = pstmt.executeQuery();
 						 
-			  	    while(consultaValidando.next()) {
+			  	    while (rs.next()) {
 					System.out.println("PASSEI AQUI NOVO status"+status+" LEITE"+" confirmando");
 					executarContrato.executarContratosConfirmar(arg0);
 					System.out.println("PASSEI AQUI NOVO SAINDO"+status+" LEITE" +"confirmando");

@@ -7,10 +7,8 @@ import br.com.sankhya.jape.EntityFacade;
 import br.com.sankhya.jape.vo.DynamicVO;
 import br.com.sankhya.jape.vo.EntityVO;
 
-
 public class salvarDadosEmpenho {
-	
-    
+
     public static BigDecimal salvarCabecalhoDados(
     		EntityFacade dwf,
     		ContextoAcao arg0,
@@ -22,35 +20,33 @@ public class salvarDadosEmpenho {
     		BigDecimal codCencus,
     		BigDecimal codProj,
     		BigDecimal vlrNota,
-    		String numContrato,
+    		BigDecimal numContrato,
     		String empenho) throws Exception {
     	
 		//SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
 		//Date parsedDate = dateFormat.parse(dataEntrega);
 	   // Timestamp timestamp1 = new java.sql.Timestamp(parsedDate.getTime());
 	    
-    	 DynamicVO faturaVO = (DynamicVO)dwf.getDefaultValueObjectInstance("CabecalhoNota");
-    	faturaVO.setProperty("CODEMP", codEmp);
-        faturaVO.setProperty("CODPARC", codParc);
-        faturaVO.setProperty("CODTIPOPER", codTipOper);
-        faturaVO.setProperty("CODTIPVENDA", codTipVenda);
-        faturaVO.setProperty("CODNAT", codNat);
-        faturaVO.setProperty("CODCENCUS", codCencus);
-        faturaVO.setProperty("CODPROJ", codProj);
-        faturaVO.setProperty("VLRNOTA", vlrNota);
-        faturaVO.setProperty("AD_EMPENHO", empenho);
-        faturaVO.setProperty("NUMCONTRATO", new BigDecimal(numContrato));
-        faturaVO.setProperty("CIF_FOB", "S");
-        faturaVO.setProperty("NUMNOTA", BigDecimal.ZERO);
-        dwf.createEntity("CabecalhoNota", (EntityVO)faturaVO);
-        return faturaVO.asBigDecimal("NUNOTA");
+        DynamicVO cabVO = (DynamicVO) dwf.getDefaultValueObjectInstance("CabecalhoNota");
+    	cabVO.setProperty("CODEMP", codEmp);
+        cabVO.setProperty("CODPARC", codParc);
+        cabVO.setProperty("CODTIPOPER", codTipOper);
+        cabVO.setProperty("CODTIPVENDA", codTipVenda);
+        cabVO.setProperty("CODNAT", codNat);
+        cabVO.setProperty("CODCENCUS", codCencus);
+        cabVO.setProperty("CODPROJ", codProj);
+        cabVO.setProperty("VLRNOTA", vlrNota);
+        cabVO.setProperty("AD_EMPENHO", empenho);
+        cabVO.setProperty("NUMCONTRATO", numContrato);
+        cabVO.setProperty("CIF_FOB", "S");
+        cabVO.setProperty("NUMNOTA", BigDecimal.ZERO);
+        dwf.createEntity("CabecalhoNota", (EntityVO)cabVO);
+        return cabVO.asBigDecimal("NUNOTA");
     	
     }
-    
-    
+
     public static void salvarItensDados(
     		EntityFacade dwf,
-    		ContextoAcao arg0,
     		BigDecimal codEmp,
     		BigDecimal nuNota,
     		BigDecimal codProd,
@@ -58,9 +54,8 @@ public class salvarDadosEmpenho {
     		String codVol, 
     		BigDecimal vlrUnit,
     		BigDecimal vlrTot) throws Exception {
-    	
-    	
-    	 DynamicVO itemVO = (DynamicVO)dwf.getDefaultValueObjectInstance("ItemNota");
+
+    	 DynamicVO itemVO = (DynamicVO) dwf.getDefaultValueObjectInstance("ItemNota");
          itemVO.setProperty("NUNOTA", nuNota);
          itemVO.setProperty("CODEMP", codEmp);
          itemVO.setProperty("CODPROD", codProd);
@@ -94,10 +89,9 @@ public class salvarDadosEmpenho {
          itemVO.setProperty("ANO", ano);
          itemVO.setProperty("DIA_SEMANA", diaSemana);
          itemVO.setProperty("DIA", dia);
-         dwf.createEntity("AD_PERIODOANO", (EntityVO)itemVO);
+         dwf.createEntity("AD_PERIODOANO", (EntityVO) itemVO);
     }
-    
-    
+
     /*public static void gerarEmpenho(
     		EntityFacade dwf,
     		BigDecimal CODPROD,
@@ -124,45 +118,44 @@ public class salvarDadosEmpenho {
     
     public static void gerarEmpenho(
     		EntityFacade dwf,
-    		BigDecimal CODPROD,
-    		BigDecimal NUMCONTRATO,
-    		BigDecimal CODPARC,
-    		BigDecimal QTDDISPONIVEL, 
-    		BigDecimal QTDLIBERAR, 
-    		String EMPENHO,
-    		BigDecimal AD_DISPONIVEL) throws Exception {
-    	
-    	
+    		BigDecimal codProd,
+            String codVol,
+    		BigDecimal numContrato,
+    		BigDecimal codParc,
+    		BigDecimal qtdDisponivel,
+    		BigDecimal qtdLiberar,
+    		String empenho,
+    		BigDecimal adDisponivel) throws Exception {
+
     	 DynamicVO itemVO = (DynamicVO)dwf.getDefaultValueObjectInstance("AD_ITENSEMPENHO");
-         itemVO.setProperty("CODPROD", CODPROD);
-         itemVO.setProperty("NUMCONTRATO", NUMCONTRATO);
-       //  itemVO.setProperty("CODPARC", CODPARC);
-         itemVO.setProperty("QTDDISPONIVEL", QTDDISPONIVEL);
+         itemVO.setProperty("CODPROD", codProd);
+         itemVO.setProperty("CODVOL", codVol);
+         itemVO.setProperty("NUMCONTRATO", numContrato);
+         // itemVO.setProperty("CODPARC", codParc);
+         itemVO.setProperty("QTDDISPONIVEL", qtdDisponivel);
          itemVO.setProperty("QTDLIBERAR", BigDecimal.ZERO);
-         itemVO.setProperty("EMPENHO", EMPENHO);
-         itemVO.setProperty("AD_DISPONIVEL", AD_DISPONIVEL);
-         dwf.createEntity("AD_ITENSEMPENHO", (EntityVO)itemVO);
+         itemVO.setProperty("EMPENHO", empenho);
+         itemVO.setProperty("AD_DISPONIVEL", adDisponivel);
+         dwf.createEntity("AD_ITENSEMPENHO", (EntityVO) itemVO);
          
     }
     
     public static void gerarEmpenhoConverter(
     		EntityFacade dwf,
-    		BigDecimal CODPROD,
-    		BigDecimal NUMCONTRATO,
-    		BigDecimal QTDDISPONIVEL, 
-    		BigDecimal QTDLIBERADA, 
-    		String EMPENHO) throws Exception {
-    	
-    	
+    		BigDecimal codProd,
+    		BigDecimal numContrato,
+    		BigDecimal qtdDisponivel,
+    		BigDecimal qtdLiberada,
+    		String empenho) throws Exception {
+
     	 DynamicVO itemVO = (DynamicVO)dwf.getDefaultValueObjectInstance("AD_CONVERTEREMPENHO");
-         itemVO.setProperty("CODPROD", CODPROD);
-         itemVO.setProperty("NUMCONTRATO", NUMCONTRATO);
-         itemVO.setProperty("QTDDISPONIVEL", QTDDISPONIVEL);
+         itemVO.setProperty("CODPROD", codProd);
+         itemVO.setProperty("NUMCONTRATO", numContrato);
+         itemVO.setProperty("QTDDISPONIVEL", qtdDisponivel);
          itemVO.setProperty("QTDLIBERAR", BigDecimal.ZERO);
-         itemVO.setProperty("EMPENHO", EMPENHO);
-         itemVO.setProperty("QTDLIBERADA", QTDLIBERADA);
-         dwf.createEntity("AD_CONVERTEREMPENHO", (EntityVO)itemVO);
-         
+         itemVO.setProperty("EMPENHO", empenho);
+         itemVO.setProperty("QTDLIBERADA", qtdLiberada);
+         dwf.createEntity("AD_CONVERTEREMPENHO", (EntityVO) itemVO);
     }
 
 }

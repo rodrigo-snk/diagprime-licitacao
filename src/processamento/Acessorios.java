@@ -7,6 +7,7 @@ import br.com.sankhya.jape.util.DateTimeUtil;
 import br.com.sankhya.jape.vo.DynamicVO;
 import br.com.sankhya.jape.vo.EntityVO;
 import br.com.sankhya.mgecomercial.model.facades.helpper.ItemNotaHelpper;
+import br.com.sankhya.modelcore.MGEModelException;
 import br.com.sankhya.modelcore.comercial.impostos.AliquotaImpostoHelper;
 import br.com.sankhya.modelcore.comercial.impostos.ImpostosHelpper;
 import br.com.sankhya.modelcore.dwfdata.vo.CabecalhoNotaVO;
@@ -90,8 +91,9 @@ public class Acessorios {
         jdbc.openSession();
 
         //Conversão de unidades
-        PreparedStatement  pstmt = jdbc.getPreparedStatement("SELECT DIVIDEMULTIPLICA,MULTIPVLR,QUANTIDADE FROM TGFVOA WHERE CODPROD = "+codProd+" and CODVOL = '"+codVol+"'");
+        PreparedStatement pstmt = jdbc.getPreparedStatement("SELECT DIVIDEMULTIPLICA,MULTIPVLR,QUANTIDADE FROM TGFVOA WHERE CODPROD = "+codProd+" and CODVOL = '"+codVol+"'");
         ResultSet rs = pstmt.executeQuery();
+
 
         if(rs.next()){
 
@@ -100,10 +102,10 @@ public class Acessorios {
 
             if (divideOuMultiplica.equalsIgnoreCase("M")) {
                 qtdNeg = qtdNeg.multiply(quantidade);
-                vlrUnit = vlrUnit.divide(quantidade);
+                vlrUnit = vlrUnit.divide(quantidade, MathContext.DECIMAL128);
             }
             else if (divideOuMultiplica.equalsIgnoreCase("D")) {
-                qtdNeg = qtdNeg.divide(quantidade);
+                qtdNeg = qtdNeg.divide(quantidade, MathContext.DECIMAL128);
                 vlrUnit = vlrUnit.multiply(quantidade);
             }
         }

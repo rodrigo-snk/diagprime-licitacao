@@ -21,32 +21,22 @@ public class deleteItens {
 		jdbcWrapper.openSession();
 
 		DynamicVO dados = (DynamicVO) arg0.getVo();
-		BigDecimal codIteLic = (dados.asBigDecimalOrZero("CODITELIC"));
-		BigDecimal qtdNeg = (dados.asBigDecimalOrZero("QTDE"));
-		BigDecimal vlrTot = (dados.asBigDecimalOrZero("VLRTOTAL"));
-		BigDecimal vlrUnit = (dados.asBigDecimalOrZero("VLRUNIT"));
-		BigDecimal codLic = (dados.asBigDecimalOrZero("CODLIC"));
-		BigDecimal codProd = (dados.asBigDecimalOrZero("CODPROD"));
+		BigDecimal codLic = dados.asBigDecimalOrZero("CODLIC");
+		BigDecimal codIteLic = dados.asBigDecimalOrZero("CODITELIC");
+		BigDecimal qtdNeg = dados.asBigDecimalOrZero("QTDE");
+		BigDecimal vlrTot = dados.asBigDecimalOrZero("VLRTOTAL");
+		BigDecimal vlrUnit = dados.asBigDecimalOrZero("VLRUNIT");
+		BigDecimal codProd = dados.asBigDecimalOrZero("CODPROD");
 
+		DynamicVO licitacaoVO = (DynamicVO) dwf.findEntityByPrimaryKeyAsVO("AD_LICITACAO", codLic);
+		BigDecimal nuNota = licitacaoVO.asBigDecimal("NUNOTA");
+		BigDecimal codEmp = licitacaoVO.asBigDecimal("CODEMP");
 
-  		String consultaCabecalho = "select codemp,nunota,codlic from ad_licitacao  where codlic="+codLic;
-		PreparedStatement  consultaValidando2 = jdbcWrapper.getPreparedStatement(consultaCabecalho);
-		ResultSet consultaCabecalho2 = consultaValidando2.executeQuery();
-
-		while(consultaCabecalho2.next()){
-
-			BigDecimal nuNota = consultaCabecalho2.getBigDecimal("NUNOTA");
-			BigDecimal codEmp = consultaCabecalho2.getBigDecimal("CODEMP");
-				
-			String update = "DELETE FROM TGFITE WHERE NUNOTA="+nuNota+" AND AD_CODITELIC="+codIteLic+" and CODPROD="+codProd;
-			PreparedStatement  updateValidando = jdbcWrapper.getPreparedStatement(update);
-	  		updateValidando.executeUpdate();
+		String update = "DELETE FROM TGFITE WHERE NUNOTA="+nuNota+" AND AD_CODITELIC="+codIteLic+" and CODPROD="+codProd;
+		PreparedStatement pstmt = jdbcWrapper.getPreparedStatement(update);
+	  	pstmt.executeUpdate();
 	  		
-				ImpostosHelpper impostos = new ImpostosHelpper();
-				impostos.setForcarRecalculo(true);
-				impostos.calcularImpostos(nuNota);
-				
-		}
+		Impostos.recalculaImpostos(codLic);
   		
 		jdbcWrapper.closeSession();
 	}

@@ -11,6 +11,7 @@ import br.com.sankhya.jape.dao.JdbcWrapper;
 import br.com.sankhya.jape.util.JapeSessionContext;
 import br.com.sankhya.jape.vo.DynamicVO;
 import br.com.sankhya.jape.vo.EntityVO;
+import com.sankhya.util.TimeUtils;
 import consultas.contratosCons;
 
 public class contratos {
@@ -18,79 +19,72 @@ public class contratos {
 	
     public static BigDecimal salvarContrato(
     		EntityFacade dwf,
-    		String CODEMP,
-    		String CODPARC,
-    		String CODCONTATO,
-    		String CODTIPVENDA,
-    		String CODNAT,
-    		String CODTIPOPER,
-    		String nuNota) throws Exception {
+    		BigDecimal codEmp,
+    		BigDecimal codParc,
+    		BigDecimal codContato,
+    		BigDecimal codTipVenda,
+    		BigDecimal codNat,
+    		BigDecimal codTipOper,
+    		BigDecimal nuNota) throws Exception {
 
     	Date parsedDate = new Date();
-	    Timestamp DTCONTRATO = new Timestamp(parsedDate.getTime());
-	    Timestamp DTBASEREAJ = new Timestamp(parsedDate.getTime());
+	    Timestamp dtContrato = TimeUtils.getNow();
+	    Timestamp dtBaseReaj = TimeUtils.getNow();
 	    JdbcWrapper jdbcWrapper = dwf.getJdbcWrapper();
 		jdbcWrapper.openSession();
 	    String resumo = "";
 	    String sqlConsulta = contratosCons.buscarDadosResumo(nuNota);
-	    PreparedStatement  updateValidando = jdbcWrapper.getPreparedStatement(sqlConsulta);
-  		ResultSet consultaValidando = updateValidando.executeQuery();
+	    PreparedStatement pstmt = jdbcWrapper.getPreparedStatement(sqlConsulta);
+  		ResultSet rs = pstmt.executeQuery();
 
-  	    while(consultaValidando.next()) {
-  	    	
-  	    	resumo = consultaValidando.getString("NUMERO");
-  	    	
+  	    while(rs.next()) {
+  	    	resumo = rs.getString("NUMERO");
   	    }
 	    
-		BigDecimal CODUSU = (BigDecimal) JapeSessionContext.getRequiredProperty("usuario_logado");
+		BigDecimal codUsuLogado = (BigDecimal) JapeSessionContext.getRequiredProperty("usuario_logado");
 		
-    	DynamicVO gerarContratos = (DynamicVO) dwf.getDefaultValueObjectInstance("Contrato");
-    	gerarContratos.setProperty("DTCONTRATO", DTCONTRATO);
-    	gerarContratos.setProperty("CODEMP", new BigDecimal(CODEMP));
-    	gerarContratos.setProperty("CODPARC", new BigDecimal(CODPARC));
-    	gerarContratos.setProperty("CODCONTATO", new BigDecimal(CODCONTATO));
-    	gerarContratos.setProperty("CODUSU", CODUSU);
-    	gerarContratos.setProperty("CODNAT", new BigDecimal(CODNAT));
-    	gerarContratos.setProperty("CODTIPVENDA", new BigDecimal(CODTIPVENDA));
-    	gerarContratos.setProperty("AD_CODTIPOPER", new BigDecimal(CODTIPOPER));
-    	gerarContratos.setProperty("ATIVO", "S");
-    	gerarContratos.setProperty("AD_NUMEROLICITACAO", resumo);
-    	gerarContratos.setProperty("DTBASEREAJ", DTBASEREAJ);
-		dwf.createEntity("Contrato", (EntityVO) gerarContratos);
-		return gerarContratos.asBigDecimal("NUMCONTRATO");
-    	
+    	DynamicVO contratoVO = (DynamicVO) dwf.getDefaultValueObjectInstance("Contrato");
+    	contratoVO.setProperty("DTCONTRATO", dtContrato);
+    	contratoVO.setProperty("CODEMP", codEmp);
+    	contratoVO.setProperty("CODPARC", codParc);
+    	contratoVO.setProperty("CODCONTATO", codContato);
+    	contratoVO.setProperty("CODUSU", codUsuLogado);
+    	contratoVO.setProperty("CODNAT", codNat);
+    	contratoVO.setProperty("CODTIPVENDA", codTipVenda);
+    	contratoVO.setProperty("AD_CODTIPOPER", codTipOper);
+    	contratoVO.setProperty("ATIVO", "S");
+    	contratoVO.setProperty("AD_NUMEROLICITACAO", resumo);
+    	contratoVO.setProperty("DTBASEREAJ", dtBaseReaj);
+		dwf.createEntity("Contrato", (EntityVO) contratoVO);
+
+		return contratoVO.asBigDecimal("NUMCONTRATO");
     }
-    
-    
-    
-    
+
     public static void salvarContratoItens(
     		EntityFacade dwf,
-    		String NUMCONTRATO,
-    		String CODPROD,
-    		String QTDEPREVISTA,
-    		String VLRUNIT) throws Exception {
-
+    		BigDecimal numContrato,
+    		BigDecimal codProd,
+    		BigDecimal qtdPrevista,
+    		BigDecimal vlrUnit) throws Exception {
 
     	//Date parsedDate = new Date();
-	    //Timestamp DTALTER = new Timestamp(parsedDate.getTime());
+	    //Timestamp dtAlter = new Timestamp(parsedDate.getTime());
 	    
 	   /* if(true) {
 			throw new PersistenceException("CODPROD = "+CODPROD+" - qtdNeg = "+QTDEPREVISTA+" - vlrUnit - "+VLRUNIT+" - NumContrato = "+NUMCONTRATO+" dtneg"+DTALTER);
 		}*/
-	    
-	    
-    	DynamicVO gerarItensContratos = (DynamicVO) dwf.getDefaultValueObjectInstance("ProdutoServicoContrato");
-    	gerarItensContratos.setProperty("NUMCONTRATO", new BigDecimal(NUMCONTRATO));
-    	gerarItensContratos.setProperty("CODPROD", new BigDecimal(CODPROD));
-    	gerarItensContratos.setProperty("SITPROD", "A");
-    	gerarItensContratos.setProperty("IMPRNOTA", "S");
-    	gerarItensContratos.setProperty("LIMITANTE", "N");
-    	gerarItensContratos.setProperty("QTDEPREVISTA", new BigDecimal(QTDEPREVISTA));
-    	gerarItensContratos.setProperty("AD_QTDLIBERAR", new BigDecimal(QTDEPREVISTA));
-    	gerarItensContratos.setProperty("VLRUNIT", new BigDecimal(VLRUNIT));
-    //	gerarItensContratos.setProperty("DTALTER", DTALTER);
-		dwf.createEntity("ProdutoServicoContrato", (EntityVO) gerarItensContratos);
+
+    	DynamicVO produtoContratoVO = (DynamicVO) dwf.getDefaultValueObjectInstance("ProdutoServicoContrato");
+    	produtoContratoVO.setProperty("NUMCONTRATO", numContrato);
+    	produtoContratoVO.setProperty("CODPROD", codProd);
+		produtoContratoVO.setProperty("SITPROD", "A");
+    	produtoContratoVO.setProperty("IMPRNOTA", "S");
+    	produtoContratoVO.setProperty("LIMITANTE", "N");
+    	produtoContratoVO.setProperty("QTDEPREVISTA", qtdPrevista);
+    	produtoContratoVO.setProperty("AD_QTDLIBERAR", qtdPrevista);
+    	produtoContratoVO.setProperty("VLRUNIT", vlrUnit);
+    //	gerarItensContratos.setProperty("DTALTER", dtAlter);
+		dwf.createEntity("ProdutoServicoContrato", (EntityVO) produtoContratoVO);
 		
     }
 	

@@ -30,101 +30,100 @@ public class lancarPedidos implements AcaoRotinaJava {
 
         Registro[] linhas = arg0.getLinhas();
         String qtdDisponivel = "0";
-        String numContrato = "0";
+        BigDecimal numContrato;
         String codProd = "0";
         String qtd = "0";
         //String empenho = "";
 
-        for (Integer i = 0; i < linhas.length; i++) {
-            //qtdDisponivel = "" + linhas[i].getCampo("QTDDISPONIVEL");
-            numContrato = "" + linhas[i].getCampo("NUMCONTRATO");
-            //	codProd = "" + linhas[i].getCampo("CODPROD");
-            //	qtd = "" + linhas[i].getCampo("QTDLIBERAR");
+		for (Registro linha : linhas) {
+			//qtdDisponivel = "" + linhas[i].getCampo("QTDDISPONIVEL");
+			numContrato = (BigDecimal) linha.getCampo("NUMCONTRATO");
+			//	codProd = "" + linhas[i].getCampo("CODPROD");
+			//	qtd = "" + linhas[i].getCampo("QTDLIBERAR");
 
-            String sql = "SELECT EMPENHO,QTDDISPONIVEL,NUMCONTRATO,CODPROD,QTDLIBERAR FROM AD_CONVERTEREMPENHO\r\n"
-                    + "WHERE  QTDLIBERAR>0 AND NUMCONTRATO = " + numContrato + " ORDER BY EMPENHO";
-            PreparedStatement updateValidando = jdbcWrapper.getPreparedStatement(sql);
-            ResultSet consultaValidando = updateValidando.executeQuery();
-            BigDecimal nuNota = BigDecimal.ZERO;
-            while (consultaValidando.next()) {
+			String sql = "SELECT EMPENHO,QTDDISPONIVEL,NUMCONTRATO,CODPROD,QTDLIBERAR FROM AD_CONVERTEREMPENHO\r\n"
+					+ "WHERE  QTDLIBERAR>0 AND NUMCONTRATO = " + numContrato + " ORDER BY EMPENHO";
+			PreparedStatement updateValidando = jdbcWrapper.getPreparedStatement(sql);
+			ResultSet consultaValidando = updateValidando.executeQuery();
+			BigDecimal nuNota = BigDecimal.ZERO;
+			while (consultaValidando.next()) {
 
-                qtdDisponivel = consultaValidando.getString("QTDDISPONIVEL");
-                codProd = consultaValidando.getString("CODPROD");
-                qtd = consultaValidando.getString("QTDLIBERAR");
-                String empenho = consultaValidando.getString("EMPENHO");
-
-
-                //empenho = "" + linhas[i].getCampo("EMPENHO");
-
-                if (qtdDisponivel.equalsIgnoreCase("null")) {
-                    qtdDisponivel = "0";
-                }
-                //arg0.mostraErro(" qtdDisponivel "+qtdDisponivel+" - "+qtd);
-
-                //arg0.mostraErro(qtdDisponivel+" - "+qtd);
-                if (!(Integer.parseInt(qtd) > Integer.parseInt(qtdDisponivel))) {
+				qtdDisponivel = consultaValidando.getString("QTDDISPONIVEL");
+				codProd = consultaValidando.getString("CODPROD");
+				qtd = consultaValidando.getString("QTDLIBERAR");
+				String empenho = consultaValidando.getString("EMPENHO");
 
 
-                    if (Integer.parseInt(qtd) > 0) {
+				//empenho = "" + linhas[i].getCampo("EMPENHO");
 
-                        String consultaCabec = consultasDados.retornaDadosCabecalho(numContrato);
-                        PreparedStatement preCabecalho = jdbcWrapper.getPreparedStatement(consultaCabec);
-                        ResultSet consultaPre = preCabecalho.executeQuery();
+				if (qtdDisponivel.equalsIgnoreCase("null")) {
+					qtdDisponivel = "0";
+				}
+				//arg0.mostraErro(" qtdDisponivel "+qtdDisponivel+" - "+qtd);
 
-                        if (consultaPre.next()) {
+				//arg0.mostraErro(qtdDisponivel+" - "+qtd);
+				if (!(Integer.parseInt(qtd) > Integer.parseInt(qtdDisponivel))) {
 
-                            BigDecimal codEmp = consultaPre.getBigDecimal("CODEMP");
-                            BigDecimal codParc = consultaPre.getBigDecimal("CODPARC");
-                            BigDecimal codTipOper = new BigDecimal(CODTIPOPER1);
-                            BigDecimal codTipVenda = consultaPre.getBigDecimal("CODTIPVENDA");
-                            BigDecimal codNat = consultaPre.getBigDecimal("CODNAT");
-                            BigDecimal codCencus = consultaPre.getBigDecimal("CODCENCUS");
-                            BigDecimal codProj = consultaPre.getBigDecimal("CODPROJ");
 
-                            if (!((nuNota.intValue()) > 0)) {
+					if (Integer.parseInt(qtd) > 0) {
 
-                                nuNota = salvarDadosEmpenho.salvarCabecalhoDados(
-                                        dwf,
-                                        arg0,
-                                        codEmp,
-                                        codParc,
-                                        codTipOper,
-                                        codTipVenda,
-                                        codNat,
-                                        codCencus,
-                                        codProj,
-                                        new BigDecimal(0),
-                                        numContrato,
-                                        empenho);
-                            }
+						String consultaCabec = consultasDados.retornaDadosCabecalho(numContrato.toString());
+						PreparedStatement preCabecalho = jdbcWrapper.getPreparedStatement(consultaCabec);
+						ResultSet consultaPre = preCabecalho.executeQuery();
 
-                            String consultaItens = consultasDados.retornaDadosItensPedidos(codProd, numContrato);
-                            PreparedStatement preItens = jdbcWrapper.getPreparedStatement(consultaItens);
-                            ResultSet consultaPreItens = preItens.executeQuery();
-                            while (consultaPreItens.next()) {
+						if (consultaPre.next()) {
 
-                                String codVol = consultaPreItens.getString("CODVOL");
-                                String vlrUnit = consultaPreItens.getString("VLRUNIT");
-                                BigDecimal vlrTot = (new BigDecimal(vlrUnit)).multiply(new BigDecimal(qtd));
+							BigDecimal codEmp = consultaPre.getBigDecimal("CODEMP");
+							BigDecimal codParc = consultaPre.getBigDecimal("CODPARC");
+							BigDecimal codTipOper = new BigDecimal(CODTIPOPER1);
+							BigDecimal codTipVenda = consultaPre.getBigDecimal("CODTIPVENDA");
+							BigDecimal codNat = consultaPre.getBigDecimal("CODNAT");
+							BigDecimal codCencus = consultaPre.getBigDecimal("CODCENCUS");
+							BigDecimal codProj = consultaPre.getBigDecimal("CODPROJ");
 
-                                salvarDadosEmpenho.salvarItensDados(
-                                        dwf,
-                                        arg0,
-                                        codEmp,
-                                        nuNota,
-                                        new BigDecimal(codProd),
-                                        new BigDecimal(qtd),
-                                        codVol,
-                                        new BigDecimal(vlrUnit),
-                                        vlrTot);
+							if (!((nuNota.intValue()) > 0)) {
 
-                                String update1 = "UPDATE AD_CONVERTEREMPENHO set QTDLIBERAR=0,QTDDISPONIVEL=QTDDISPONIVEL-" + qtd + "  WHERE NUMCONTRATO = " + numContrato + " AND CODPROD = " + codProd;
-                                PreparedStatement preUpdt1 = jdbcWrapper.getPreparedStatement(update1);
-                                preUpdt1.executeUpdate();
-                            }
+								nuNota = salvarDadosEmpenho.salvarCabecalhoDados(
+										dwf,
+										arg0,
+										codEmp,
+										codParc,
+										codTipOper,
+										codTipVenda,
+										codNat,
+										codCencus,
+										codProj,
+										new BigDecimal(0),
+										numContrato,
+										empenho);
+							}
 
-                            //empenhoFuncionalidades.liberarEmpenho(arg0, new BigDecimal(numContrato), empenho);
-                        }
+							String consultaItens = consultasDados.retornaDadosItensPedidos(codProd, numContrato.toString());
+							PreparedStatement preItens = jdbcWrapper.getPreparedStatement(consultaItens);
+							ResultSet consultaPreItens = preItens.executeQuery();
+							while (consultaPreItens.next()) {
+
+								String codVol = consultaPreItens.getString("CODVOL");
+								String vlrUnit = consultaPreItens.getString("VLRUNIT");
+								BigDecimal vlrTot = (new BigDecimal(vlrUnit)).multiply(new BigDecimal(qtd));
+
+								salvarDadosEmpenho.salvarItensDados(
+										dwf,
+										codEmp,
+										nuNota,
+										new BigDecimal(codProd),
+										new BigDecimal(qtd),
+										codVol,
+										new BigDecimal(vlrUnit),
+										vlrTot);
+
+								String update1 = "UPDATE AD_CONVERTEREMPENHO set QTDLIBERAR=0,QTDDISPONIVEL=QTDDISPONIVEL-" + qtd + "  WHERE NUMCONTRATO = " + numContrato + " AND CODPROD = " + codProd;
+								PreparedStatement preUpdt1 = jdbcWrapper.getPreparedStatement(update1);
+								preUpdt1.executeUpdate();
+							}
+
+							//empenhoFuncionalidades.liberarEmpenho(arg0, new BigDecimal(numContrato), empenho);
+						}
 						/*EntityFacade dwf,
 						ContextoAcao arg0,
 						BigDecimal codEmp,
@@ -136,19 +135,19 @@ public class lancarPedidos implements AcaoRotinaJava {
 						BigDecimal codProj,
 						BigDecimal vlrNota*/
 
-                    } else {
+					} else {
 
-                        arg0.mostraErro("Obrigatório, quantidade ser maior que zero!");
+						arg0.mostraErro("Obrigatório, quantidade ser maior que zero!");
 
-                    }
+					}
 
-                } else {
-                    arg0.mostraErro("Quantidade digitada não pode ser maior que a disponivel! Cód. Prod :" + codProd);
-                }
-            }
+				} else {
+					arg0.mostraErro("Quantidade digitada não pode ser maior que a disponivel! Cód. Prod :" + codProd);
+				}
+			}
 
-            arg0.setMensagemRetorno("Pedido " + nuNota + " Gerado com sucesso");
-        }
+			arg0.setMensagemRetorno("Pedido " + nuNota + " Gerado com sucesso");
+		}
 
     }
 

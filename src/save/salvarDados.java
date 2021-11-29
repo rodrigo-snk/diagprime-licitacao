@@ -36,7 +36,7 @@ public class salvarDados {
     		BigDecimal codLic) throws Exception {
 
 	    
-		DynamicVO cabVO = (DynamicVO)dwf.getDefaultValueObjectInstance("CabecalhoNota");
+		DynamicVO cabVO = (DynamicVO) dwf.getDefaultValueObjectInstance("CabecalhoNota");
     	cabVO.setProperty("CODEMP", codEmp);
         cabVO.setProperty("CODPARC", codParc);
         cabVO.setProperty("CODTIPOPER", codTipOper);
@@ -128,7 +128,7 @@ public class salvarDados {
     	String insertSql = "insert into AD_LICITACAOCOMPONENTES(CODLICCOM,CODLIC,CODPROD,QTDNEG,CODVOL,CUSTO,MARKUPFATOR,VLRUNIT)\r\n"
     			+ "  (select rownum,CODLIC,CODMATPRIMA,QTDNEG,CODVOL,CUSTOMATERIAPRIMA,MARKUPFATOR,VLRUNIT from\n" +
 				"(select CODLIC,CODMATPRIMA,SUM(QTDNEG) as QTDNEG,CODVOL,(CUSTOMATERIAPRIMA) as CUSTOMATERIAPRIMA,MARKUPFATOR as MARKUPFATOR, VLRUNIT as VLRUNIT\n" +
-				"FROM (select "+codLic+" as CODLIC,CODMATPRIMA,case when voa.dividemultiplica = 'M' THEN (qtde*qtdmistura)*voa.quantidade*voa.multipvlr ELSE (qtde*qtdmistura)/(voa.quantidade*voa.multipvlr) END QTDNEG,TGFICP.CODVOL,(CUSTO.CUSGER) AS CUSTOMATERIAPRIMA,1.10 AS MARKUPFATOR,\n" +
+				"FROM (select "+codLic+" as CODLIC,CODMATPRIMA,case when voa.dividemultiplica = 'M' THEN (qtde*qtdmistura)*voa.quantidade*voa.multipvlr WHEN voa.dividemultiplica = 'D' THEN (qtde*qtdmistura)/(voa.quantidade*voa.multipvlr) ELSE (qtde*qtdmistura) END QTDNEG,TGFICP.CODVOL,(CUSTO.CUSGER) AS CUSTOMATERIAPRIMA,1.10 AS MARKUPFATOR,\n" +
 				"(CUSTO.CUSGER*1.10) AS VLRUNIT\n" +
 				"from TGFICP INNER JOIN\n" +
 				"(SELECT coalesce(CUSGER,0) as CUSGER,TGFCUS.CODPROD\n" +
@@ -147,6 +147,7 @@ public class salvarDados {
 		// Execute DELETE on TGFITE
 		PreparedStatement deleteItemComponentes = jdbc.getPreparedStatement("DELETE FROM TGFITE WHERE AD_CODLIC = "+codLic+" AND AD_CODLICCOM IS NOT NULL");
 		deleteItemComponentes.executeUpdate();
+
 		// Execute INSERT on AD_LICITACAOCOMPONENTES
     	PreparedStatement insert = jdbc.getPreparedStatement(insertSql);
   		insert.executeUpdate();
@@ -155,8 +156,11 @@ public class salvarDados {
 		PreparedStatement consultaLic = jdbc.getPreparedStatement(sql);
 		ResultSet componente = consultaLic.executeQuery();
 		BigDecimal nuNota = null;
-		
+
+		//if (true) throw new MGEModelException("DEU RUIM NO RS COMPONENTE" + componente.next());
+
 		while (componente.next()) {
+
 			BigDecimal codLicCom = componente.getBigDecimal("CODLICCOM");
 			nuNota = componente.getBigDecimal("NUNOTA");
 			BigDecimal codEmp = componente.getBigDecimal("CODEMP");
@@ -169,15 +173,14 @@ public class salvarDados {
 			if(!(markupFator.doubleValue()>0)) markupFator = BigDecimal.ONE;
 			if(!(qtdNeg.doubleValue()>0)) qtdNeg = BigDecimal.ONE;
 
+
 			Acessorios.salvarAcessoriosDados(nuNota,codProd,qtdNeg,codVol,vlrUnit,vlrTot,codEmp,codLicCom,codLic);
 
-			
 		}
 
 		ImpostosHelpper impostos = new ImpostosHelpper();
 		impostos.setForcarRecalculo(true);
 		impostos.calcularImpostos(nuNota);
-
 
 		jdbc.closeSession();
     }

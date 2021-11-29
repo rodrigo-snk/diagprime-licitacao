@@ -13,11 +13,9 @@ import consultas.consultasEmpenho;
 import save.salvarDadosEmpenho;
 
 public class empenhoFuncionalidades {
-	
-	
+
 	public static void liberarEmpenho(ContextoAcao arg0,BigDecimal contrato,String empenho) throws Exception {
-		
-		
+
 		EntityFacade dwf = EntityFacadeFactory.getDWFFacade();
 		JdbcWrapper jdbc = dwf.getJdbcWrapper();
 		jdbc.openSession();
@@ -27,36 +25,32 @@ public class empenhoFuncionalidades {
 				consultaParEmepenho.execute();
 
 		String consulta = consultasEmpenho.empenhoConsulta(""+contrato);
-		PreparedStatement  consultaPar2 = jdbc.getPreparedStatement(consulta);
-		ResultSet retornoParametros12 = consultaPar2.executeQuery();
-		while(retornoParametros12.next()) {
-			
-			BigDecimal CODPROD = retornoParametros12.getBigDecimal("CODPROD");
-			BigDecimal CODPARC = retornoParametros12.getBigDecimal("CODPARC");
-			BigDecimal QTDDISPONIVEL = retornoParametros12.getBigDecimal("QTD_DISPONIVEL");
-			BigDecimal AD_DISPONIVEL = retornoParametros12.getBigDecimal("AD_DISPONIVEL");
-			
-			
+		PreparedStatement pstmt = jdbc.getPreparedStatement(consulta);
+		ResultSet rs = pstmt.executeQuery();
+		while(rs.next()) {
+			BigDecimal codProd = rs.getBigDecimal("CODPROD");
+			String codVol = rs.getString("CODVOL");
+			BigDecimal codParc = rs.getBigDecimal("CODPARC");
+			BigDecimal qtdDisponivel = rs.getBigDecimal("QTD_DISPONIVEL");
+			BigDecimal adDisponivel = rs.getBigDecimal("AD_DISPONIVEL");
+
 			salvarDadosEmpenho.gerarEmpenho(
 					dwf, 
-					CODPROD, 
+					codProd,
+					codVol,
 					contrato, 
-					CODPARC, 
-					QTDDISPONIVEL, 
+					codParc,
+					qtdDisponivel,
 					BigDecimal.ZERO, 
 					empenho,
-					AD_DISPONIVEL);
-			
+					adDisponivel);
 		}
 		
 		jdbc.closeSession();
-		
-		
 	}
 	
 	public static void liberarEmpenhoTodos(ContextoAcao arg0,BigDecimal contrato,String empenho) throws Exception {
-		
-		
+
 		EntityFacade dwf = EntityFacadeFactory.getDWFFacade();
 		JdbcWrapper jdbc = dwf.getJdbcWrapper();
 		jdbc.openSession();
@@ -65,7 +59,7 @@ public class empenhoFuncionalidades {
 				PreparedStatement  consultaParEmepenho = jdbc.getPreparedStatement(deleteEmpenho);
 				consultaParEmepenho.execute();*/
 
-		String consulta = consultasEmpenho.empenhoConsulta(""+contrato);
+		String consulta = consultasEmpenho.empenhoConsulta(contrato.toString());
 		PreparedStatement  consultaPar2 = jdbc.getPreparedStatement(consulta);
 		ResultSet retornoParametros12 = consultaPar2.executeQuery();
 		while(retornoParametros12.next()) {

@@ -37,8 +37,8 @@ public class gerarNotas {
 		JdbcWrapper jdbcWrapper = dwf.getJdbcWrapper();
 		jdbcWrapper.openSession();
 
-		String consulta = consultasDados.retornoDados();
-		PreparedStatement pstmt = jdbcWrapper.getPreparedStatement(consulta);
+		final String sql = consultasDados.retornoDados();
+		PreparedStatement pstmt = jdbcWrapper.getPreparedStatement(sql);
 		ResultSet rs = pstmt.executeQuery();
 		while (rs.next()) {
 		

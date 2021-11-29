@@ -36,7 +36,6 @@ public class confirmarNota implements AcaoRotinaJava {
 		for (Registro linha : linhas) {
 
 			nuNota = (BigDecimal) linha.getCampo("NUNOTA");
-
 			Impostos.recalculaImpostos((BigDecimal) linha.getCampo("CODLIC"));
 
 			/*Collection<BigDecimal> numNota = new ArrayList<>();

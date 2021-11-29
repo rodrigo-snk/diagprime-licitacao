@@ -17,6 +17,7 @@ import processamento.Impostos;
 import processamento.deleteItens;
 import processamento.insertItens;
 import processamento.updateItens;
+import save.salvarDados;
 
 public class atualizarItens implements EventoProgramavelJava {
 
@@ -64,15 +65,13 @@ public class atualizarItens implements EventoProgramavelJava {
 	@Override
 	public void afterUpdate(PersistenceEvent arg0) throws Exception {
 
-		if (arg0.getModifingFields().isModifing("UNID")) {
-			updateItens.atualizarCustoVolume(arg0);
-		}
+		JdbcWrapper jdbc = EntityFacadeFactory.getDWFFacade().getJdbcWrapper();
+		jdbc.openSession();
 
-		if (arg0.getModifingFields().isModifing("QTDE")) {
-			updateItens.atualizarCustoProduto(arg0);
-		}
-
+		salvarDados.insertComponentes((BigDecimal) arg0.getEntityProperty("CODLIC"), jdbc);
 		Impostos.recalculaImpostos((BigDecimal) arg0.getEntityProperty("CODLIC"));
+
+		jdbc.closeSession();
 
 	}
 
@@ -96,6 +95,9 @@ public class atualizarItens implements EventoProgramavelJava {
 	@Override
 	public void beforeUpdate(PersistenceEvent arg0) throws Exception {
 
+		if (arg0.getModifingFields().isModifing("QTDE")) {
+			updateItens.atualizarQtdNeg(arg0);
+		}
 
 		if (arg0.getModifingFields().isModifing("CUSTO") || arg0.getModifingFields().isModifing("MARKUPFATOR")) {
 			updateItens.atualizarCustoProduto(arg0);
@@ -103,6 +105,10 @@ public class atualizarItens implements EventoProgramavelJava {
 
 		if (arg0.getModifingFields().isModifing("VLRUNIT")) {
 			updateItens.atualizarVlrUnit(arg0);
+		}
+
+		if (arg0.getModifingFields().isModifing("UNID")) {
+			updateItens.atualizarCustoVolume(arg0);
 		}
 
 

@@ -17,24 +17,24 @@ public class recalculoCustoAction implements AcaoRotinaJava {
 
 		for (Registro registro : registros) {
 
-			BigDecimal CODLIC = (BigDecimal) registro.getCampo("CODLIC");
-			BigDecimal CODITELIC = (BigDecimal) registro.getCampo("CODITELIC");
-			BigDecimal CODPROD = (BigDecimal) registro.getCampo("CODPROD");
-			BigDecimal QTDE = (BigDecimal) registro.getCampo("QTDE");
-			BigDecimal VLRTOTAL = (BigDecimal) registro.getCampo("VLRTOTAL");
-			BigDecimal VLRUNIT = (BigDecimal) registro.getCampo("VLRUNIT");
-			BigDecimal MARKUPFATOR = (BigDecimal) registro.getCampo("MARKUPFATOR");
-			String CODVOL = "" + registro.getCampo("UNID");
+			BigDecimal codLic = (BigDecimal) registro.getCampo("CODLIC");
+			BigDecimal codIteLic = (BigDecimal) registro.getCampo("CODITELIC");
+			BigDecimal codProd = (BigDecimal) registro.getCampo("CODPROD");
+			BigDecimal qtde = (BigDecimal) registro.getCampo("QTDE");
+			BigDecimal vlrTotal = (BigDecimal) registro.getCampo("VLRTOTAL");
+			BigDecimal vlrUnit = (BigDecimal) registro.getCampo("VLRUNIT");
+			BigDecimal markUpFator = (BigDecimal) registro.getCampo("MARKUPFATOR");
+			String codVol = (String) registro.getCampo("UNID");
 
 			recalcularItens.atualizarCusto(
-					CODITELIC,
-					CODLIC,
-					CODPROD,
-					QTDE,
-					VLRTOTAL,
-					VLRUNIT,
-					MARKUPFATOR,
-					CODVOL);
+					codIteLic,
+					codLic,
+					codProd,
+					qtde,
+					vlrTotal,
+					vlrUnit,
+					markUpFator,
+					codVol);
 		}
 		arg0.setMensagemRetorno("Recalculado com sucesso");
 	}

@@ -11,7 +11,9 @@ import br.com.sankhya.jape.dao.JdbcWrapper;
 import br.com.sankhya.jape.event.PersistenceEvent;
 import br.com.sankhya.jape.vo.DynamicVO;
 import br.com.sankhya.modelcore.MGEModelException;
+import br.com.sankhya.modelcore.comercial.ComercialUtils;
 import br.com.sankhya.modelcore.comercial.impostos.ImpostosHelpper;
+import br.com.sankhya.modelcore.util.DynamicEntityNames;
 import br.com.sankhya.modelcore.util.EntityFacadeFactory;
 import consultas.consultasDados;
 import save.salvarDados;
@@ -34,11 +36,13 @@ public class insertItens {
 		BigDecimal item = itemVO.asBigDecimalOrZero("ITEM");
 		BigDecimal markupFator = itemVO.asBigDecimalOrZero("MARKUPFATOR");
 		String codVol = itemVO.asString("UNID");
-		BigDecimal replicando = (itemVO.asBigDecimalOrZero("REPLICANDO"));
+		BigDecimal replicando = itemVO.asBigDecimalOrZero("REPLICANDO");
+
 
 		if (markupFator.compareTo(BigDecimal.ZERO) <= 0) {
 			markupFator = BigDecimal.ONE;
 		}
+
 		if (qtdNeg.compareTo(BigDecimal.ZERO) <= 0) {
 			qtdNeg = BigDecimal.ONE;
 		}
@@ -49,43 +53,52 @@ public class insertItens {
 		boolean isServico = false;
 		while(rs.next()) isServico = rs.getString("USOPROD").equals("S");
 
-		
-		String consultaDados = "SELECT coalesce(CUSGER,0) as CUSGER FROM TGFCUS WHERE CODPROD = "+codProd+" AND DTATUAL IN (\r\n"
-				+ "select MAX(DTATUAL) AS VALOR from TGFCUS WHERE CODPROD = "+codProd+")";
+		final String consultaDados = "SELECT coalesce(CUSGER,0) as CUSGER FROM TGFCUS WHERE CODPROD = "+codProd+" AND DTATUAL IN (\r\n"
+				+ "select MAX(CN.DTATUAL) AS VALOR from TGFCUS CN WHERE CN.CODPROD = "+codProd+")";
 		
 		pstmt = jdbcWrapper.getPreparedStatement(consultaDados);
 		rs = pstmt.executeQuery();
-		BigDecimal valor = BigDecimal.ZERO;
+		BigDecimal custo = BigDecimal.ZERO;
 
-		while(rs.next()) valor = (rs.getBigDecimal("CUSGER") == null) ? BigDecimal.ZERO : rs.getBigDecimal("CUSGER");
+		BigDecimal custo2 = ComercialUtils.obtemPrecoCusto("G", " ", BigDecimal.ONE, BigDecimal.ZERO, codProd);
 
-		if(!(valor.intValue() > 0) && !isServico) {
+
+		while(rs.next()) {
+			custo = (rs.getBigDecimal("CUSGER") == null) ? BigDecimal.ONE : rs.getBigDecimal("CUSGER");
+		}
+
+		if(!(custo.intValue() > 0) && !isServico) {
 			throw new PersistenceException("Custo do produto obrigatório, não encontrado ou está zerado o custo, no cadastro de custo "+consultaDados);
 		}
 
-		vlrUnit = valor.multiply(markupFator);
+
+		//VERIFICAR NECESSIDADE
+		vlrUnit = custo.multiply(markupFator);
 		vlrTot = vlrUnit.multiply(qtdNeg);
 
 		String update;
 		String update1;
 		if(!((replicando.intValue())>0)) {
-				update = "UPDATE AD_ITENSLICITACAO SET ITEM=(select COALESCE(max(item),0)+1 item from AD_ITENSLICITACAO WHERE CODLIC="+codLic+"),MARKUPFATOR="+markupFator+",CUSTO="+valor+",VLRTOTAL="+vlrTot+",QTDE="+qtdNeg+",VLRUNIT="+vlrUnit+" "
-				+ " where CODITELIC="+codIteLic+" and CODLIC="+codLic;
-				
-				update1 = "UPDATE TGFITE SET VLRTOT="+vlrTot+",QTDNEG="+qtdNeg+",VLRUNIT="+vlrUnit+" "
-						+ " where AD_CODITELIC="+codIteLic+" and AD_CODLIC="+codLic;
+			update = "UPDATE AD_ITENSLICITACAO SET ITEM=(select COALESCE(max(item),0)+1 item from AD_ITENSLICITACAO WHERE CODLIC="+codLic+"),MARKUPFATOR="+markupFator+",CUSTO="+custo+",VLRTOTAL="+vlrTot+",QTDE="+qtdNeg+",VLRUNIT="+vlrUnit+" "
+					+ " where CODITELIC="+codIteLic+" and CODLIC="+codLic;
 
-				pstmt = jdbcWrapper.getPreparedStatement(update1);
-				pstmt.executeUpdate();
-				
-				
-		}else {
-				update = "UPDATE AD_ITENSLICITACAO SET REPLICANDO=0 "
-						+ "WHERE CODITELIC="+codIteLic+" AND CODLIC="+codLic;
+			update1 = "UPDATE TGFITE SET VLRTOT="+vlrTot+",QTDNEG="+qtdNeg+",VLRUNIT="+vlrUnit+" "
+					+ " where AD_CODITELIC="+codIteLic+" and AD_CODLIC="+codLic;
+
+			pstmt = jdbcWrapper.getPreparedStatement(update1);
+			pstmt.executeUpdate();
+
+		} else {
+			//Quando esta replicando entra aqui
+			update = "UPDATE AD_ITENSLICITACAO SET REPLICANDO=0 WHERE CODITELIC="+codIteLic+" AND CODLIC="+codLic;
 		}
 
 		pstmt = jdbcWrapper.getPreparedStatement(update);
 		pstmt.executeUpdate();
+
+		ComercialUtils.MontantesVolumeAlternativo volumeAlternativo = ComercialUtils.calcularVolumeAlternativo(codProd, codVol, " ", qtdNeg, vlrUnit);
+		//if (true) throw new MGEModelException("QTDNEG: " +qtdNeg+ " QTDNEG P/ MET: " +volumeAlternativo.getQtdVolAlternativo()+ "VLRUNIT: " +vlrUnit+ "VLRUNIT P/ MET: " +volumeAlternativo.getVlrVolAlternativo());
+
 
 		DynamicVO licitacaoVO = (DynamicVO) dwf.findEntityByPrimaryKeyAsVO("AD_LICITACAO", codLic);
 		BigDecimal nuNota = licitacaoVO.asBigDecimal("NUNOTA");
@@ -99,17 +112,23 @@ public class insertItens {
 			BigDecimal quantidade = rs.getBigDecimal("QUANTIDADE").multiply(rs.getBigDecimal("MULTIPVLR"));
 
 			if (divideOuMultiplica.equalsIgnoreCase("M")) {
+				custo = custo.multiply(quantidade);
 				qtdNeg = qtdNeg.multiply(quantidade);
-				vlrUnit = vlrUnit.divide(quantidade, MathContext.DECIMAL128);
+				vlrUnit = custo.multiply(markupFator).divide(quantidade, MathContext.DECIMAL128);
 			}
 			else if (divideOuMultiplica.equalsIgnoreCase("D")) {
+				custo = custo.divide(quantidade, MathContext.DECIMAL128);
 				qtdNeg = qtdNeg.divide(quantidade, MathContext.DECIMAL128);
-				vlrUnit = vlrUnit.multiply(quantidade);
+				vlrUnit = custo.multiply(markupFator).multiply(quantidade);
 			}
-
-			salvarDados.salvarItensDados(dwf,nuNota,codProd,qtdNeg,codVol,vlrUnit,vlrTot,codEmp,codIteLic,codLic);
-
 		}
+
+		//vlrUnit = custo.multiply(markupFator);
+		vlrTot = vlrUnit.multiply(qtdNeg);
+
+		//pstmt.executeUpdate("UPDATE AD_ITENSLICITACAO SET CUSTO="+custo+", VLRUNIT = "+custo.multiply(markupFator)+", VLRTOTAL = "+vlrTot.multiply(qtdNeg.multiply(volumeAlternativo.getQtdVolAlternativo()))+" where CODITELIC="+codIteLic+" and CODLIC="+codLic);
+
+		salvarDados.salvarItensDados(dwf,nuNota,codProd,qtdNeg,codVol,vlrUnit,vlrTot,codEmp,codIteLic,codLic);
 
 		ImpostosHelpper impostos = new ImpostosHelpper();
 		impostos.setForcarRecalculo(true);

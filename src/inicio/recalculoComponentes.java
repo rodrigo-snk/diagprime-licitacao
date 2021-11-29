@@ -26,12 +26,11 @@ public class recalculoComponentes implements AcaoRotinaJava {
 		BigDecimal codLic = (BigDecimal) registros[0].getCampo("CODLIC");
 
 		String sql = "select * from ad_licitacao  where codlic=" + codLic;
-		PreparedStatement consulta = jdbc.getPreparedStatement(sql);
-		ResultSet rset = consulta.executeQuery();
+		PreparedStatement pstmt = jdbc.getPreparedStatement(sql);
+		ResultSet rs = pstmt.executeQuery();
 
-		while (rset.next()) {
-
-			BigDecimal nuNota = rset.getBigDecimal("NUNOTA");
+		while (rs.next()) {
+			BigDecimal nuNota = rs.getBigDecimal("NUNOTA");
 			ImpostosHelpper impostos = new ImpostosHelpper();
 			impostos.setForcarRecalculo(true);
 			impostos.calcularImpostos(nuNota);

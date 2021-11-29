@@ -30,24 +30,22 @@ public class recalcularItens {
 		EntityFacade dwf = EntityFacadeFactory.getDWFFacade();
 		JdbcWrapper jdbcWrapper = dwf.getJdbcWrapper();
 		jdbcWrapper.openSession();
-	
-		
-		if(!(markupFator.doubleValue()>0)) {
+
+		if (markupFator.compareTo(BigDecimal.ZERO) <= 0) {
 			markupFator = BigDecimal.ONE;
 		}
-		
-		if(!(qtdNeg.doubleValue()>0)) {
+		if (qtdNeg.compareTo(BigDecimal.ZERO) <= 0) {
 			qtdNeg = BigDecimal.ONE;
 		}
 		
 		final String consultaDados = "SELECT coalesce(CUSGER,0) as CUSGER FROM TGFCUS WHERE CODPROD = "+codProd+" AND DTATUAL IN (\r\n"
 				+ "select MAX(DTATUAL) AS VALOR from TGFCUS WHERE CODPROD = "+codProd+")";
 		
-		PreparedStatement consultaValidando = jdbcWrapper.getPreparedStatement(consultaDados);
-		ResultSet consulta = consultaValidando.executeQuery();
+		PreparedStatement pstmt = jdbcWrapper.getPreparedStatement(consultaDados);
+		ResultSet rs = pstmt.executeQuery();
 		BigDecimal custo = BigDecimal.ZERO;
-		while(consulta.next()){
-			custo = consulta.getBigDecimal("CUSGER");
+		while(rs.next()){
+			custo = rs.getBigDecimal("CUSGER");
 		}
 		
 		if(!(custo.intValue()>0)) {
@@ -62,13 +60,13 @@ public class recalcularItens {
   		updateValidando.executeUpdate();
 		
   		String consultaCabecalho = "select codemp,nunota,codlic from ad_licitacao  where codlic="+codLic;
-		PreparedStatement  consultaValidando2 = jdbcWrapper.getPreparedStatement(consultaCabecalho);
-		ResultSet consultaCabecalho2 = consultaValidando2.executeQuery();
+		pstmt = jdbcWrapper.getPreparedStatement(consultaCabecalho);
+		rs = pstmt.executeQuery();
 
-		while(consultaCabecalho2.next()){
+		while(rs.next()){
 
-			BigDecimal nuNota = consultaCabecalho2.getBigDecimal("NUNOTA");
-			BigDecimal codEmp = consultaCabecalho2.getBigDecimal("CODEMP");
+			BigDecimal nuNota = rs.getBigDecimal("NUNOTA");
+			BigDecimal codEmp = rs.getBigDecimal("CODEMP");
 
 			//ERRO adiciona um novo item na TGFITE
 			/*salvarDados.salvarItensDados(

@@ -20,43 +20,39 @@ public class lancarEmpenhoTodos implements AcaoRotinaJava {
 
 	@Override
 	public void doAction(ContextoAcao arg0) throws Exception {
-		// TODO Auto-generated method stub
-		
 		//String qtd = ""+arg0.getParam("QUANTIDADE");
-		String empenho = ""+arg0.getParam("EMPENHO");
+		String empenho = (String) arg0.getParam("EMPENHO");
 
 		EntityFacade dwf = EntityFacadeFactory.getDWFFacade();
 		JdbcWrapper jdbcWrapper = dwf.getJdbcWrapper();
 		jdbcWrapper.openSession();
 		
 		Registro[] linhas = arg0.getLinhas();
-        String qtdDisponivel = "0";
-        String numContrato = "0";
-        String codProd = "0";
-        String qtd = "0";
-       // String empenho = "";
-        
-		for (Integer i = 0; i < linhas.length; i++) {
-			qtdDisponivel = "" + linhas[i].getCampo("QTDDISPONIVEL");
-			numContrato = "" + linhas[i].getCampo("NUMCONTRATO");
-			codProd = "" + linhas[i].getCampo("CODPROD");
-			qtd = "" + linhas[i].getCampo("QTDLIBERAR");
-			//empenho = "" + linhas[i].getCampo("EMPENHO");
-			
-			if(qtdDisponivel.equalsIgnoreCase("null")) {
-				qtdDisponivel = "0";
+        BigDecimal qtdDisponivel;
+        BigDecimal numContrato;
+        BigDecimal codProd = BigDecimal.ZERO;
+        BigDecimal qtd = BigDecimal.ZERO;
+
+		for (Registro linha : linhas) {
+			qtdDisponivel = (BigDecimal) linha.getCampo("QTDDISPONIVEL");
+			numContrato = (BigDecimal) linha.getCampo("NUMCONTRATO");
+			codProd = (BigDecimal) linha.getCampo("CODPROD");
+			qtd = (BigDecimal) linha.getCampo("QTDLIBERAR");
+			//empenho = (BigDecimal) linha.getCampo("EMPENHO");
+
+			if (qtdDisponivel == null) {
+				qtdDisponivel = BigDecimal.ZERO;
 			}
-			//arg0.mostraErro(" qtdDisponivel "+qtdDisponivel+" - "+qtd);
+			//arg0.mostraErro("qtdDisponivel " +qtdDisponivel+ " - " +qtd);
 
-			//arg0.mostraErro(qtdDisponivel+" - "+qtd);
+			//arg0.mostraErro(qtdDisponivel +" - " +qtd);
 
-			
 			String consulta = consultasDados.retornoValidaEmpenho();
-			PreparedStatement  updateValidando = jdbcWrapper.getPreparedStatement(consulta);
-	  		ResultSet consultaValidando = updateValidando.executeQuery();
- 			 
-	  	    if(consultaValidando.next()) {
-				  empenhoFuncionalidades.liberarEmpenhoTodos(arg0, new BigDecimal(numContrato), empenho);
+			PreparedStatement pstmt = jdbcWrapper.getPreparedStatement(consulta);
+			ResultSet rs = pstmt.executeQuery();
+
+			if (rs.next()) {
+				empenhoFuncionalidades.liberarEmpenhoTodos(arg0, numContrato, empenho);
 		 
 	  	    	/*EntityFacade dwf,
 	    		ContextoAcao arg0,
@@ -68,13 +64,12 @@ public class lancarEmpenhoTodos implements AcaoRotinaJava {
 	    		BigDecimal codCencus,
 	    		BigDecimal codProj,
 	    		BigDecimal vlrNota*/
-	    		
-	  	    	}else {
-	  	    	
-	  	    	arg0.mostraErro("Usuário não tem permissão");
-	  	    }
-			
-		
+
+			} else {
+
+				arg0.mostraErro("Usuário não tem permissão");
+			}
+
 		}
 		arg0.setMensagemRetorno("Empenho liberado Total com sucesso");
 
