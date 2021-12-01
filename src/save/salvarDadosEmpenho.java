@@ -6,6 +6,7 @@ import br.com.sankhya.extensions.actionbutton.ContextoAcao;
 import br.com.sankhya.jape.EntityFacade;
 import br.com.sankhya.jape.vo.DynamicVO;
 import br.com.sankhya.jape.vo.EntityVO;
+import br.com.sankhya.modelcore.comercial.ComercialUtils;
 
 public class salvarDadosEmpenho {
 
@@ -55,7 +56,7 @@ public class salvarDadosEmpenho {
     		BigDecimal vlrUnit,
     		BigDecimal vlrTot) throws Exception {
 
-    	 DynamicVO itemVO = (DynamicVO) dwf.getDefaultValueObjectInstance("ItemNota");
+        DynamicVO itemVO = (DynamicVO) dwf.getDefaultValueObjectInstance("ItemNota");
          itemVO.setProperty("NUNOTA", nuNota);
          itemVO.setProperty("CODEMP", codEmp);
          itemVO.setProperty("CODPROD", codProd);
@@ -128,14 +129,17 @@ public class salvarDadosEmpenho {
     		BigDecimal adDisponivel) throws Exception {
 
     	 DynamicVO itemVO = (DynamicVO)dwf.getDefaultValueObjectInstance("AD_ITENSEMPENHO");
-         itemVO.setProperty("CODPROD", codProd);
+        ComercialUtils.MontantesVolumeAlternativo volumeAlternativo = ComercialUtils.calcularVolumeAlternativo(codProd, codVol, " ", qtdDisponivel, BigDecimal.ZERO);
+        ComercialUtils.MontantesVolumeAlternativo volumeAlternativo2 = ComercialUtils.calcularVolumeAlternativo(codProd, codVol, " ", adDisponivel, BigDecimal.ZERO);
+
+        itemVO.setProperty("CODPROD", codProd);
          itemVO.setProperty("CODVOL", codVol);
          itemVO.setProperty("NUMCONTRATO", numContrato);
          // itemVO.setProperty("CODPARC", codParc);
-         itemVO.setProperty("QTDDISPONIVEL", qtdDisponivel);
+         itemVO.setProperty("QTDDISPONIVEL", volumeAlternativo.getQtdVolAlternativo());
          itemVO.setProperty("QTDLIBERAR", BigDecimal.ZERO);
          itemVO.setProperty("EMPENHO", empenho);
-         itemVO.setProperty("AD_DISPONIVEL", adDisponivel);
+         itemVO.setProperty("AD_DISPONIVEL", volumeAlternativo2.getQtdVolAlternativo());
          dwf.createEntity("AD_ITENSEMPENHO", (EntityVO) itemVO);
          
     }
@@ -143,15 +147,18 @@ public class salvarDadosEmpenho {
     public static void gerarEmpenhoConverter(
     		EntityFacade dwf,
     		BigDecimal codProd,
+            String codVol,
     		BigDecimal numContrato,
     		BigDecimal qtdDisponivel,
     		BigDecimal qtdLiberada,
     		String empenho) throws Exception {
 
     	 DynamicVO itemVO = (DynamicVO)dwf.getDefaultValueObjectInstance("AD_CONVERTEREMPENHO");
+         ComercialUtils.MontantesVolumeAlternativo volumeAlternativo = ComercialUtils.calcularVolumeAlternativo(codProd, codVol, " ", qtdDisponivel, BigDecimal.ZERO);
          itemVO.setProperty("CODPROD", codProd);
+         itemVO.setProperty("CODVOL", codVol);
          itemVO.setProperty("NUMCONTRATO", numContrato);
-         itemVO.setProperty("QTDDISPONIVEL", qtdDisponivel);
+         itemVO.setProperty("QTDDISPONIVEL",  qtdDisponivel);
          itemVO.setProperty("QTDLIBERAR", BigDecimal.ZERO);
          itemVO.setProperty("EMPENHO", empenho);
          itemVO.setProperty("QTDLIBERADA", qtdLiberada);

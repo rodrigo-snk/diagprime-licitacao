@@ -5,19 +5,19 @@ import br.com.sankhya.extensions.actionbutton.ContextoAcao;
 import br.com.sankhya.extensions.actionbutton.Registro;
 import br.com.sankhya.jape.EntityFacade;
 import br.com.sankhya.jape.dao.JdbcWrapper;
+import br.com.sankhya.jape.ejbcontainer.EntityContainer;
 import br.com.sankhya.jape.util.FinderWrapper;
 import br.com.sankhya.jape.vo.DynamicVO;
-import br.com.sankhya.jape.vo.EntityVO;
 import br.com.sankhya.modelcore.auth.AuthenticationInfo;
 import br.com.sankhya.modelcore.util.DynamicEntityNames;
 import br.com.sankhya.modelcore.util.EntityFacadeFactory;
-import com.sankhya.util.Finder;
 import consultas.consultasDados;
 import save.salvarDadosEmpenho;
 
 import java.math.BigDecimal;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
 
@@ -47,9 +47,9 @@ public class lancarEmpenhoNovo implements AcaoRotinaJava {
             //qtdDisponivel = (BigDecimal) linha.getCampo("QTDDISPONIVEL");
             //codProd = (BigDecimal) linha.getCampo("CODPROD");
             //qtdLiberar = (BigDecimal) linha.getCampo("QTDLIBERAR");
-            numContrato = BigDecimal.valueOf((Long) linha.getCampo("NUMCONTRATO"));
+            numContrato = (BigDecimal) linha.getCampo("NUMCONTRATO");
 
-            LinkedList<DynamicVO> itensEmpenhoVO = (LinkedList<DynamicVO>) EntityFacadeFactory.getDWFFacade().findByDynamicFinder(new FinderWrapper("AD_ITENSEMPENHO", "this.QTDLIBERAR > 0 AND this.NUMCONTRATO = ?", new Object[] { numContrato }));
+            ArrayList<DynamicVO> itensEmpenhoVO = (ArrayList<DynamicVO>) EntityFacadeFactory.getDWFFacade().findByDynamicFinderAsVO(new FinderWrapper("AD_ITENSEMPENHO", "this.QTDLIBERAR > 0 AND this.NUMCONTRATO = ?", new Object[] { numContrato }));
 
             for (DynamicVO itemVO: itensEmpenhoVO) {
 
@@ -60,7 +60,7 @@ public class lancarEmpenhoNovo implements AcaoRotinaJava {
 
                 if (qtdLiberarMenorQueDisponivel) {
 
-                    String consulta = consultasDados.retornoValidaEmpenho();
+                    String consulta = consultasDados.validaEmpenho();
                     PreparedStatement pstmt = jdbcWrapper.getPreparedStatement(consulta);
                     ResultSet rs = pstmt.executeQuery();
 
@@ -97,7 +97,7 @@ public class lancarEmpenhoNovo implements AcaoRotinaJava {
                         pstmt = jdbcWrapper.getPreparedStatement(sql);
                         rs = pstmt.executeQuery();
                         while (rs.next()) {
-
+                            // Unidade padrão do produto
                             String codVol = rs.getString("CODVOL");
                             BigDecimal vlrUnit = rs.getBigDecimal("VLRUNIT");
                             BigDecimal vlrTot = vlrUnit.multiply(qtdLiberar);
@@ -112,7 +112,7 @@ public class lancarEmpenhoNovo implements AcaoRotinaJava {
                                         codVol,
                                         new BigDecimal(vlrUnit),
                                         vlrTot);*/
-                            salvarDadosEmpenho.gerarEmpenhoConverter(dwf, codProd, numContrato, qtdLiberar, qtdLiberar, empenho);
+                            salvarDadosEmpenho.gerarEmpenhoConverter(dwf, codProd, codVol, numContrato, qtdLiberar, qtdLiberar, empenho);
 
                             final String update = "UPDATE TCSPSC set AD_QTDLIBERAR=AD_QTDLIBERAR-" + qtdLiberar + "  WHERE NUMCONTRATO = " + numContrato + " AND CODPROD = " + codProd;
                             pstmt = jdbcWrapper.getPreparedStatement(update);

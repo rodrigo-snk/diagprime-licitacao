@@ -1,15 +1,11 @@
 package inicio;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Map;
 import br.com.sankhya.extensions.actionbutton.AcaoRotinaJava;
 import br.com.sankhya.extensions.actionbutton.ContextoAcao;
 import br.com.sankhya.extensions.actionbutton.Registro;
 import br.com.sankhya.modelcore.auth.AuthenticationInfo;
 import br.com.sankhya.modelcore.comercial.BarramentoRegra;
-import br.com.sankhya.modelcore.comercial.ComercialUtils;
 import br.com.sankhya.modelcore.comercial.ConfirmacaoNotaHelper;
 import br.com.sankhya.modelcore.comercial.CentralFaturamento.ConfiguracaoFaturamento;
 import br.com.sankhya.modelcore.comercial.centrais.CACHelper;
@@ -54,7 +50,7 @@ public class confirmarNota implements AcaoRotinaJava {
 				ServiceContext textoNovo = ServiceContext.getCurrent();
 				chave = textoNovo.getHttpSessionId();
 
-				msg = "Licitação Aprovada !";
+				msg = "Licitação Aprovada!";
 
 			} else {
 

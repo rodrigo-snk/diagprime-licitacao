@@ -9,12 +9,9 @@ import br.com.sankhya.extensions.actionbutton.ContextoAcao;
 import br.com.sankhya.extensions.actionbutton.Registro;
 import br.com.sankhya.jape.EntityFacade;
 import br.com.sankhya.jape.dao.JdbcWrapper;
-import br.com.sankhya.jape.util.JapeSessionContext;
 import br.com.sankhya.modelcore.util.EntityFacadeFactory;
 import consultas.consultasDados;
 import processamento.empenhoFuncionalidades;
-import save.salvarDados;
-import save.salvarDadosEmpenho;
 
 public class lancarEmpenhoTodos implements AcaoRotinaJava {
 
@@ -47,7 +44,7 @@ public class lancarEmpenhoTodos implements AcaoRotinaJava {
 
 			//arg0.mostraErro(qtdDisponivel +" - " +qtd);
 
-			String consulta = consultasDados.retornoValidaEmpenho();
+			String consulta = consultasDados.validaEmpenho();
 			PreparedStatement pstmt = jdbcWrapper.getPreparedStatement(consulta);
 			ResultSet rs = pstmt.executeQuery();
 

@@ -71,7 +71,6 @@ public class insertItens {
 			throw new PersistenceException("Custo do produto obrigatório, não encontrado ou está zerado o custo, no cadastro de custo "+consultaDados);
 		}
 
-
 		//VERIFICAR NECESSIDADE
 		vlrUnit = custo.multiply(markupFator);
 		vlrTot = vlrUnit.multiply(qtdNeg);
@@ -125,6 +124,8 @@ public class insertItens {
 
 		//vlrUnit = custo.multiply(markupFator);
 		vlrTot = vlrUnit.multiply(qtdNeg);
+
+		ItensLicitacao.atualizaItemLic(codLic, codIteLic, custo, vlrTot, markupFator, custo);
 
 		//pstmt.executeUpdate("UPDATE AD_ITENSLICITACAO SET CUSTO="+custo+", VLRUNIT = "+custo.multiply(markupFator)+", VLRTOTAL = "+vlrTot.multiply(qtdNeg.multiply(volumeAlternativo.getQtdVolAlternativo()))+" where CODITELIC="+codIteLic+" and CODLIC="+codLic);
 

@@ -13,7 +13,7 @@ public class consultasDados {
 				+ "(select TEXTO  AS SENHA FROM TSIPAR WHERE CHAVE = 'SENHALICITACAO')D";
 	}
 	
-	public static String retornoValidaEmpenho(){
+	public static String validaEmpenho(){
 		return "SELECT AD_LEBERAEMPENHO FROM TSIUSU USU WHERE USU.CODUSU = STP_GET_CODUSULOGADO AND AD_LEBERAEMPENHO='S'";
 	}
 	
@@ -24,22 +24,21 @@ public class consultasDados {
 	
 	public static String retornaDadosItens(String codProd,String numContrato) {
 
-		return "SELECT \r\n"
-				+ "A.CODPROD,CODLOCALPADRAO, CODVOL,VLRUNIT\r\n"
-				+ "FROM \r\n"
-				+ "TGFPRO A INNER JOIN \r\n"
-				+ "TCSPSC D ON  A.CODPROD = D.CODPROD\r\n"
-				+ "WHERE D.CODPROD = "+codProd+"  AND D.NUMCONTRATO="+numContrato;
+		return "SELECT PRO.CODPROD, PRO.CODLOCALPADRAO, PSC.VLRUNIT, ITEM.CODVOL \r\n"
+		+ "FROM TGFPRO PRO\r\n"
+		+ "INNER JOIN TCSPSC PSC ON  PRO.CODPROD = PSC.CODPROD\r\n"
+		+ "INNER JOIN AD_ITENSEMPENHO ITEM ON PSC.CODPROD = ITEM.CODPROD AND PSC.NUMCONTRATO = ITEM.NUMCONTRATO\r\n"
+		+ "WHERE PSC.CODPROD = "+codProd+" AND PSC.NUMCONTRATO="+numContrato;
 	}
 	
 	public static String retornaDadosItensPedidos(String codProd,String numContrato) {
 
 		return "SELECT \r\n"
-				+ "				A.CODPROD,CODLOCALPADRAO, itens.CODVOL,itens.VLRUNIT\r\n"
-				+ "				FROM \r\n"
-				+ "				TGFPRO A INNER JOIN \r\n"
-				+ "				TCSPSC D ON  A.CODPROD = D.CODPROD inner join \r\n"
-				+ "				(select VLRUNIT,CODPROD,UNID AS CODVOL     from AD_ITENSLICITACAO A INNER JOIN \r\n"
+				+ "A.CODPROD,CODLOCALPADRAO, itens.CODVOL,itens.VLRUNIT\r\n"
+				+ "FROM \r\n"
+				+ "TGFPRO A INNER JOIN \r\n"
+				+ "TCSPSC D ON  A.CODPROD = D.CODPROD inner join \r\n"
+				+ "(select VLRUNIT,CODPROD,UNID AS CODVOL from AD_ITENSLICITACAO A INNER JOIN \r\n"
 				+ "AD_LICITACAO b ON b.codlic = A.codlic \r\n"
 				+ "where  b.nunota in (SELECT distinct  a.nunotaorig FROM TGFVAR a inner join \r\n"
 				+ "tgfvar b on  a.nunota = b.nunotaorig inner join \r\n"

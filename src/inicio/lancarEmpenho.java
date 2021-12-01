@@ -9,11 +9,8 @@ import br.com.sankhya.extensions.actionbutton.ContextoAcao;
 import br.com.sankhya.extensions.actionbutton.Registro;
 import br.com.sankhya.jape.EntityFacade;
 import br.com.sankhya.jape.dao.JdbcWrapper;
-import br.com.sankhya.jape.util.JapeSessionContext;
 import br.com.sankhya.modelcore.util.EntityFacadeFactory;
 import consultas.consultasDados;
-import processamento.empenhoFuncionalidades;
-import save.salvarDados;
 import save.salvarDadosEmpenho;
 
 public class lancarEmpenho implements AcaoRotinaJava {
@@ -63,7 +60,7 @@ public class lancarEmpenho implements AcaoRotinaJava {
 
                     if (Integer.parseInt(qtd) > 0) {
 
-                        String consulta = consultasDados.retornoValidaEmpenho();
+                        String consulta = consultasDados.validaEmpenho();
                         PreparedStatement updateValidando1 = jdbcWrapper.getPreparedStatement(consulta);
                         ResultSet consultaValidando1 = updateValidando1.executeQuery();
 
@@ -104,8 +101,8 @@ public class lancarEmpenho implements AcaoRotinaJava {
                                 while (consultaPreItens.next()) {
 
                                     String codVol = consultaPreItens.getString("CODVOL");
-                                    String vlrUnit = consultaPreItens.getString("VLRUNIT");
-                                    BigDecimal vlrTot = (new BigDecimal(vlrUnit)).multiply(new BigDecimal(qtd));
+                                    BigDecimal vlrUnit = consultaPreItens.getBigDecimal("VLRUNIT");
+                                    BigDecimal vlrTot = vlrUnit.multiply(new BigDecimal(qtd));
 	  	    			
                                     /*salvarDadosEmpenho.salvarItensDados(
                                     dwf,
@@ -121,6 +118,7 @@ public class lancarEmpenho implements AcaoRotinaJava {
                                     salvarDadosEmpenho.gerarEmpenhoConverter(
                                             dwf,
                                             new BigDecimal(codProd),
+                                            codVol,
                                             new BigDecimal(numContrato),
                                             new BigDecimal(qtd),
                                             new BigDecimal(qtd),

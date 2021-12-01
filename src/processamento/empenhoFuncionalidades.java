@@ -64,22 +64,24 @@ public class empenhoFuncionalidades {
 		ResultSet retornoParametros12 = consultaPar2.executeQuery();
 		while(retornoParametros12.next()) {
 			
-			BigDecimal CODPROD = retornoParametros12.getBigDecimal("CODPROD");
-			BigDecimal CODPARC = retornoParametros12.getBigDecimal("CODPARC");
-			BigDecimal QTDDISPONIVEL = retornoParametros12.getBigDecimal("QTD_DISPONIVEL");
-			BigDecimal AD_DISPONIVEL = retornoParametros12.getBigDecimal("AD_DISPONIVEL");
+			BigDecimal codProd = retornoParametros12.getBigDecimal("CODPROD");
+			String codVol = retornoParametros12.getString("CODVOL");
+			BigDecimal codParc = retornoParametros12.getBigDecimal("CODPARC");
+			BigDecimal qtdDisponivel = retornoParametros12.getBigDecimal("QTD_DISPONIVEL");
+			BigDecimal adDisponivel = retornoParametros12.getBigDecimal("AD_DISPONIVEL");
 			
 			
-	    		String update1 = "UPDATE AD_ITENSEMPENHO set QTDLIBERAR=0,AD_DISPONIVEL=AD_DISPONIVEL-"+AD_DISPONIVEL+"  WHERE NUMCONTRATO = "+contrato+" AND CODPROD = "+CODPROD;
+	    		String update1 = "UPDATE AD_ITENSEMPENHO set QTDLIBERAR=0,AD_DISPONIVEL=AD_DISPONIVEL-"+adDisponivel+"  WHERE NUMCONTRATO = "+contrato+" AND CODPROD = "+codProd;
 			PreparedStatement  preUpdt1 = jdbc.getPreparedStatement(update1);
 			preUpdt1.executeUpdate();
 			
             salvarDadosEmpenho.gerarEmpenhoConverter(
             		dwf, 
-            		CODPROD, 
+            		codProd,
+					codVol,
             		contrato, 
-            		AD_DISPONIVEL, 
-            		AD_DISPONIVEL, 
+            		adDisponivel,
+            		adDisponivel,
             		empenho);
             
 			/*salvarDadosEmpenho.gerarEmpenho(

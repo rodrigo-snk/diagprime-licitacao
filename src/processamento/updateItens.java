@@ -41,7 +41,9 @@ public class updateItens {
 		if (qtdNeg.compareTo(BigDecimal.ZERO) <= 0) {
 			qtdNeg = BigDecimal.ONE;
 		}
-		
+
+
+
 		final String consultaDados = "SELECT coalesce(CUSGER,0) as CUSGER FROM TGFCUS WHERE CODPROD = "+codProd+" AND DTATUAL IN (\r\n"
 				+ "select MAX(DTATUAL) AS VALOR from TGFCUS WHERE CODPROD = "+codProd+")";
 		
@@ -52,12 +54,7 @@ public class updateItens {
 			custo = rs.getBigDecimal("CUSGER");
 		}
 
-		pstmt = jdbcWrapper.getPreparedStatement("UPDATE AD_ITENSLICITACAO SET CUSTO="+custo+",VLRTOTAL="+vlrUnit.multiply(qtdNeg)+",VLRUNIT="+vlrUnit+" where CODITELIC="+codIteLic+"  and CODLIC="+codLic);
-		pstmt.executeUpdate();
-
-		//ItensLicitacao.atualizaItemLicitacao(codLic,codIteLic,vlrUnit,vlrTot,markupFator,custo);
-		//ItensLicitacao.atualizaItemLic(codLic,codIteLic,vlrUnit,vlrTot,markupFator,custo);
-
+		ItensLicitacao.atualizaItemLic(codLic,codIteLic,custo.multiply(markupFator),custo.multiply(markupFator).multiply(qtdNeg),markupFator,custo);
 
 		final String sqlunidade = "SELECT DIVIDEMULTIPLICA,MULTIPVLR,QUANTIDADE FROM TGFVOA WHERE CODPROD = "+codProd+" and CODVOL = '"+codVol+"'";
 		pstmt = jdbcWrapper.getPreparedStatement(sqlunidade);
@@ -69,24 +66,26 @@ public class updateItens {
 			if (divideOuMultiplica.equalsIgnoreCase("M")) {
 				custo = custo.multiply(quantidade);
 				qtdNeg = qtdNeg.multiply(quantidade);
+				vlrUnit = custo.multiply(markupFator).divide(quantidade, MathContext.DECIMAL128);
+
 			}
 			else if (divideOuMultiplica.equalsIgnoreCase("D")) {
 				custo = custo.divide(quantidade, MathContext.DECIMAL128);
 				qtdNeg = qtdNeg.divide(quantidade, MathContext.DECIMAL128);
+				vlrUnit = custo.multiply(markupFator).multiply(quantidade);
 			}
 		}
-
-		vlrUnit = custo.multiply(markupFator);
 
 		//Valores convertidos
 		//vlrUnit = custo.multiply(markupFator);
 		BigDecimal vlrTot = vlrUnit.multiply(qtdNeg);
+		markupFator = vlrUnit.divide(custo, MathContext.DECIMAL128);
+
+		ItensLicitacao.atualizaItemLic(codLic, codIteLic, custo, vlrTot, markupFator, custo);
 
 		final String updateIte = "UPDATE TGFITE SET QTDNEG="+qtdNeg+",VLRTOT="+vlrTot+",VLRUNIT="+vlrUnit+", CODVOL= '"+codVol+"' where AD_CODITELIC="+codIteLic+" and AD_CODLIC="+codLic;
 		pstmt = jdbcWrapper.getPreparedStatement(updateIte);
 		pstmt.executeUpdate();
-
-  		//salvarDados.insertComponentes(codLic, jdbcWrapper);
 
 		jdbcWrapper.closeSession();
 	}
@@ -170,8 +169,6 @@ public class updateItens {
 			}
 		}
 		vlrTot = vlrUnit.multiply(qtdNeg);
-
-
 
 		final String updateIte = "UPDATE TGFITE SET QTDNEG="+qtdNeg+",VLRTOT="+vlrTot+",VLRUNIT="+vlrUnit+", CODVOL= '"+codVol+"' where AD_CODITELIC="+codIteLic+" and AD_CODLIC="+codLic;
 		pstmt = jdbcWrapper.getPreparedStatement(updateIte);
@@ -267,13 +264,11 @@ public class updateItens {
 		markupFator = vlrUnit.divide(custo, MathContext.DECIMAL128);
 		BigDecimal vlrTot = vlrUnit.multiply(qtdNeg);
 
-		PreparedStatement pstmt = jdbcWrapper.getPreparedStatement("UPDATE AD_ITENSLICITACAO SET CUSTO="+custo+",VLRTOTAL="+vlrTot+",VLRUNIT="+vlrUnit+",MARKUPFATOR="+markupFator+" where CODITELIC="+codIteLic+"  and CODLIC="+codLic);
-		pstmt.executeUpdate();
 		//ItensLicitacao.atualizaItemLicitacao(codLic,codIteLic,vlrUnit,vlrTot,markupFator,custo);
-		//ItensLicitacao.atualizaItemLic(codLic,codIteLic,vlrUnit,vlrTot,markupFator,custo);
+		ItensLicitacao.atualizaItemLic(codLic,codIteLic,vlrUnit,vlrTot,markupFator,custo);
 
 		final String sqlunidade = "SELECT DIVIDEMULTIPLICA,MULTIPVLR,QUANTIDADE FROM TGFVOA WHERE CODPROD = "+codProd+" and CODVOL = '"+codVol+"'";
-		pstmt = jdbcWrapper.getPreparedStatement(sqlunidade);
+		PreparedStatement pstmt = jdbcWrapper.getPreparedStatement(sqlunidade);
 		ResultSet rs = pstmt.executeQuery();
 
 		if (rs.next()){

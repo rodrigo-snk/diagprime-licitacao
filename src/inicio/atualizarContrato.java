@@ -5,13 +5,11 @@ import java.sql.ResultSet;
 
 import br.com.sankhya.extensions.eventoprogramavel.EventoProgramavelJava;
 import br.com.sankhya.jape.EntityFacade;
-import br.com.sankhya.jape.PersistenceException;
 import br.com.sankhya.jape.core.JapeSession;
 import br.com.sankhya.jape.dao.JdbcWrapper;
 import br.com.sankhya.jape.event.PersistenceEvent;
 import br.com.sankhya.jape.event.TransactionContext;
 import br.com.sankhya.jape.vo.DynamicVO;
-import br.com.sankhya.jape.vo.PrePersistEntityState;
 import br.com.sankhya.modelcore.util.EntityFacadeFactory;
 import consultas.contratosCons;
 import processamento.executarContrato;
@@ -78,10 +76,10 @@ public class atualizarContrato implements EventoProgramavelJava {
 			  		ResultSet rs = pstmt.executeQuery();
 						 
 			  	    while (rs.next()) {
-					System.out.println("PASSEI AQUI NOVO status"+status+" LEITE"+" confirmando");
-					executarContrato.executarContratosConfirmar(arg0);
-					System.out.println("PASSEI AQUI NOVO SAINDO"+status+" LEITE" +"confirmando");
+						executarContrato.confirmar(arg0);
 			  	    }
+					jdbcWrapper.closeSession();
+
 				}
 			}
 		//}

@@ -5,10 +5,13 @@ import br.com.sankhya.extensions.actionbutton.ContextoAcao;
 import br.com.sankhya.extensions.actionbutton.Registro;
 import br.com.sankhya.jape.EntityFacade;
 import br.com.sankhya.jape.dao.JdbcWrapper;
+import br.com.sankhya.modelcore.MGEModelException;
+import br.com.sankhya.modelcore.comercial.ComercialUtils;
 import br.com.sankhya.modelcore.util.EntityFacadeFactory;
 import consultas.consultasDados;
 import save.salvarDadosEmpenho;
 import java.math.BigDecimal;
+import java.math.MathContext;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
@@ -39,7 +42,7 @@ public class LancarPedidosNovo implements AcaoRotinaJava {
             String empenho = (String) linha.getCampo("EMPENHO");
             if (nuNota == null) nuNota = BigDecimal.ZERO;
 
-                if (qtdLiberar.compareTo(qtdDisponivel) < 0) {
+                if (qtdLiberar.compareTo(qtdDisponivel) <= 0) {
 
                     if (qtdLiberar.compareTo(BigDecimal.ZERO) > 0) {
 
@@ -73,6 +76,9 @@ public class LancarPedidosNovo implements AcaoRotinaJava {
                                         empenho);
                             }
 
+                            pstmt = jdbcWrapper.getPreparedStatement("UPDATE AD_CONVERTEREMPENHO SET QTDLIBERAR = 0, QTDDISPONIVEL = QTDDISPONIVEL-" +qtdLiberar+ "  WHERE NUMCONTRATO = " + numContrato + " AND CODPROD = " + codProd);
+                            pstmt.executeUpdate();
+
                             String consultaItens = consultasDados.retornaDadosItensPedidos(codProd.toString(), numContrato.toString());
                             pstmt = jdbcWrapper.getPreparedStatement(consultaItens);
                             rs = pstmt.executeQuery();
@@ -83,6 +89,24 @@ public class LancarPedidosNovo implements AcaoRotinaJava {
                                 BigDecimal vlrUnit = rs.getBigDecimal("VLRUNIT");
                                 BigDecimal vlrTot = vlrUnit.multiply(qtdLiberar);
 
+                                final String sqlunidade = "SELECT DIVIDEMULTIPLICA,MULTIPVLR,QUANTIDADE FROM TGFVOA WHERE CODPROD = "+codProd+" and CODVOL = '"+codVol+"'";
+                                pstmt = jdbcWrapper.getPreparedStatement(sqlunidade);
+                                rs = pstmt.executeQuery();
+                                if (rs.next()){
+                                    final String divideOuMultiplica = rs.getString("DIVIDEMULTIPLICA");
+                                    BigDecimal quantidade = rs.getBigDecimal("QUANTIDADE").multiply(rs.getBigDecimal("MULTIPVLR"));
+
+                                    if (divideOuMultiplica.equalsIgnoreCase("M")) {
+                                        qtdLiberar = qtdDisponivel.multiply(quantidade);
+                                        vlrUnit = vlrUnit.divide(quantidade, MathContext.DECIMAL128);
+
+                                    }
+                                    else if (divideOuMultiplica.equalsIgnoreCase("D")) {
+                                        qtdLiberar = qtdLiberar.divide(quantidade, MathContext.DECIMAL128);
+                                        vlrUnit = vlrUnit.multiply(quantidade);
+                                    }
+                                }
+
                                 salvarDadosEmpenho.salvarItensDados(
                                         dwf,
                                         codEmp,
@@ -92,10 +116,6 @@ public class LancarPedidosNovo implements AcaoRotinaJava {
                                         codVol,
                                         vlrUnit,
                                         vlrTot);
-
-                                final String update1 = "UPDATE AD_CONVERTEREMPENHO SET QTDLIBERAR = 0,QTDDISPONIVEL = QTDDISPONIVEL-" +qtdLiberar+ "  WHERE NUMCONTRATO = " + numContrato + " AND CODPROD = " + codProd;
-                                pstmt = jdbcWrapper.getPreparedStatement(update1);
-                                pstmt.executeUpdate();
                             }
                             //empenhoFuncionalidades.liberarEmpenho(arg0, new BigDecimal(numContrato), empenho);
                         }
@@ -104,7 +124,7 @@ public class LancarPedidosNovo implements AcaoRotinaJava {
                         arg0.mostraErro("Quantidade à liberar deve ser maior que zero!");
                     }
                 } else {
-                    arg0.mostraErro("Quantidade digitada não pode ser maior que a disponivel! Cód. Produto : " + codProd);
+                    arg0.mostraErro("Quantidade digitada não pode ser maior que a disponivel ! Cód. Produto : " + codProd);
                 }
 
                 arg0.setMensagemRetorno("Pedido " + nuNota + " gerado com sucesso");
