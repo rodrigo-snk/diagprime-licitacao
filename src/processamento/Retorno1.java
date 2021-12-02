@@ -2,12 +2,10 @@ package processamento;
 
 
 public class Retorno1{
-	
-	
+
 	 String statusMessage;
 	 Boolean retorno;
 	 String nunota;
-	 
 
 	public String getNunota() {
 		return nunota;

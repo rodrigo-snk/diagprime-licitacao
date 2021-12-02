@@ -5,26 +5,24 @@ import br.com.sankhya.extensions.actionbutton.ContextoAcao;
 import br.com.sankhya.extensions.actionbutton.Registro;
 import br.com.sankhya.jape.EntityFacade;
 import br.com.sankhya.jape.dao.JdbcWrapper;
-import br.com.sankhya.jape.ejbcontainer.EntityContainer;
 import br.com.sankhya.jape.util.FinderWrapper;
 import br.com.sankhya.jape.vo.DynamicVO;
 import br.com.sankhya.modelcore.auth.AuthenticationInfo;
 import br.com.sankhya.modelcore.util.DynamicEntityNames;
 import br.com.sankhya.modelcore.util.EntityFacadeFactory;
 import consultas.consultasDados;
+import processamento.Empenho;
 import save.salvarDadosEmpenho;
 
 import java.math.BigDecimal;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedList;
 
 /**
  * 
  */
-public class lancarEmpenhoNovo implements AcaoRotinaJava {
+public class LancaEmpenho implements AcaoRotinaJava {
 
     @Override
     public void doAction(ContextoAcao arg0) throws Exception {
@@ -112,7 +110,7 @@ public class lancarEmpenhoNovo implements AcaoRotinaJava {
                                         codVol,
                                         new BigDecimal(vlrUnit),
                                         vlrTot);*/
-                            salvarDadosEmpenho.gerarEmpenhoConverter(dwf, codProd, codVol, numContrato, qtdLiberar, qtdLiberar, empenho);
+                            Empenho.geraEmpenhoConvertido(dwf, codProd, codVol, numContrato, qtdLiberar, qtdLiberar, empenho);
 
                             final String update = "UPDATE TCSPSC set AD_QTDLIBERAR=AD_QTDLIBERAR-" + qtdLiberar + "  WHERE NUMCONTRATO = " + numContrato + " AND CODPROD = " + codProd;
                             pstmt = jdbcWrapper.getPreparedStatement(update);

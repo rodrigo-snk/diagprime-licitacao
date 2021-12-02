@@ -1,23 +1,17 @@
 package inicio;
 
 import br.com.sankhya.extensions.eventoprogramavel.EventoProgramavelJava;
-import br.com.sankhya.jape.EntityFacade;
-import br.com.sankhya.jape.dao.JdbcWrapper;
 import br.com.sankhya.jape.event.PersistenceEvent;
 import br.com.sankhya.jape.event.TransactionContext;
 import br.com.sankhya.jape.vo.DynamicVO;
-import br.com.sankhya.jape.vo.EntityVO;
-import br.com.sankhya.modelcore.comercial.impostos.ImpostosHelpper;
 import br.com.sankhya.modelcore.util.EntityFacadeFactory;
 import processamento.Acessorios;
 import processamento.Impostos;
-import processamento.insertItens;
+import processamento.ItensLicitacao;
 
 import java.math.BigDecimal;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 
-public class atualizarAcessorios implements EventoProgramavelJava {
+public class AtualizaAcessorios implements EventoProgramavelJava {
     @Override
     public void beforeInsert(PersistenceEvent arg0) throws Exception {
 
@@ -41,7 +35,7 @@ public class atualizarAcessorios implements EventoProgramavelJava {
 
     @Override
     public void afterInsert(PersistenceEvent arg0) throws Exception {
-        insertItens.atualizarCusto(arg0);
+        ItensLicitacao.insereItem(arg0);
 
         DynamicVO acessorioVO = (DynamicVO) arg0.getVo();
         BigDecimal codLic = acessorioVO.asBigDecimalOrZero("CODLIC");
@@ -65,7 +59,7 @@ public class atualizarAcessorios implements EventoProgramavelJava {
         BigDecimal nuNota = licitacaoVO.asBigDecimalOrZero("NUNOTA");
         BigDecimal codEmp = licitacaoVO.asBigDecimalOrZero("CODEMP");
 
-        Acessorios.salvarAcessoriosDados(nuNota,codProd,qtdNeg, codVol, vlrUnit, vlrTot, codEmp, codLicCom,codLic);
+        Acessorios.insereAcessorios(nuNota,codProd,qtdNeg, codVol, vlrUnit, vlrTot, codEmp, codLicCom,codLic);
 
     }
 

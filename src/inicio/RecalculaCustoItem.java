@@ -5,9 +5,9 @@ import java.math.BigDecimal;
 import br.com.sankhya.extensions.actionbutton.AcaoRotinaJava;
 import br.com.sankhya.extensions.actionbutton.ContextoAcao;
 import br.com.sankhya.extensions.actionbutton.Registro;
-import processamento.recalcularItens;
+import processamento.ItensLicitacao;
 
-public class recalculoCustoAction implements AcaoRotinaJava {
+public class RecalculaCustoItem implements AcaoRotinaJava {
 
 	@Override
 	public void doAction(ContextoAcao arg0) throws Exception {
@@ -26,7 +26,7 @@ public class recalculoCustoAction implements AcaoRotinaJava {
 			BigDecimal markUpFator = (BigDecimal) registro.getCampo("MARKUPFATOR");
 			String codVol = (String) registro.getCampo("UNID");
 
-			recalcularItens.atualizarCusto(
+			ItensLicitacao.recalculaCusto(
 					codIteLic,
 					codLic,
 					codProd,

@@ -15,7 +15,7 @@ import br.com.sankhya.modelcore.util.EntityFacadeFactory;
 import br.com.sankhya.ws.ServiceContext;
 import processamento.Impostos;
 
-public class confirmarNota implements AcaoRotinaJava {
+public class ConfirmaNota implements AcaoRotinaJava {
 
 	@Override
 	public void doAction(ContextoAcao arg0) throws Exception {

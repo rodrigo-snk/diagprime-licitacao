@@ -5,17 +5,16 @@ import br.com.sankhya.extensions.actionbutton.ContextoAcao;
 import br.com.sankhya.extensions.actionbutton.Registro;
 import br.com.sankhya.jape.EntityFacade;
 import br.com.sankhya.jape.dao.JdbcWrapper;
-import br.com.sankhya.modelcore.MGEModelException;
-import br.com.sankhya.modelcore.comercial.ComercialUtils;
 import br.com.sankhya.modelcore.util.EntityFacadeFactory;
 import consultas.consultasDados;
+import processamento.Empenho;
 import save.salvarDadosEmpenho;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
-public class LancarPedidosNovo implements AcaoRotinaJava {
+public class LancaPedidos implements AcaoRotinaJava {
 
     @Override
     public void doAction(ContextoAcao arg0) throws Exception {
@@ -61,7 +60,7 @@ public class LancarPedidosNovo implements AcaoRotinaJava {
 
                             if (!(nuNota.intValue() > 0)) {
 
-                                nuNota = salvarDadosEmpenho.salvarCabecalhoDados(
+                                nuNota = Empenho.salvaCabecalhoNota(
                                         dwf,
                                         arg0,
                                         codEmp,
@@ -107,7 +106,7 @@ public class LancarPedidosNovo implements AcaoRotinaJava {
                                     }
                                 }
 
-                                salvarDadosEmpenho.salvarItensDados(
+                                Empenho.salvaItemNota(
                                         dwf,
                                         codEmp,
                                         nuNota,

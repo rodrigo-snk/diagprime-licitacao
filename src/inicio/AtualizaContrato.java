@@ -12,9 +12,9 @@ import br.com.sankhya.jape.event.TransactionContext;
 import br.com.sankhya.jape.vo.DynamicVO;
 import br.com.sankhya.modelcore.util.EntityFacadeFactory;
 import consultas.contratosCons;
-import processamento.executarContrato;
+import processamento.Contrato;
 
-public class atualizarContrato implements EventoProgramavelJava {
+public class AtualizaContrato implements EventoProgramavelJava {
 
 	@Override
 	public void afterDelete(PersistenceEvent arg0) throws Exception {
@@ -76,7 +76,7 @@ public class atualizarContrato implements EventoProgramavelJava {
 			  		ResultSet rs = pstmt.executeQuery();
 						 
 			  	    while (rs.next()) {
-						executarContrato.confirmar(arg0);
+						Contrato.confirma(arg0);
 			  	    }
 					jdbcWrapper.closeSession();
 

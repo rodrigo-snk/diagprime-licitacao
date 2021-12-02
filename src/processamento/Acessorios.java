@@ -75,7 +75,7 @@ public class Acessorios {
      * @param codLic Cód. Licitação
      * @throws Exception
      */
-    public static void salvarAcessoriosDados(
+    public static void insereAcessorios(
             BigDecimal nuNota,
             BigDecimal codProd,
             BigDecimal qtdNeg,

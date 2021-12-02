@@ -4,10 +4,8 @@ import java.math.BigDecimal;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Timestamp;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Date;
 
 
 import br.com.sankhya.jape.EntityFacade;
@@ -18,12 +16,11 @@ import br.com.sankhya.mgecomercial.model.facades.helpper.ItemNotaHelpper;
 import br.com.sankhya.modelcore.comercial.impostos.ImpostosHelpper;
 import br.com.sankhya.modelcore.dwfdata.vo.CabecalhoNotaVO;
 import br.com.sankhya.modelcore.dwfdata.vo.ItemNotaVO;
-import br.com.sankhya.modelcore.util.EntityFacadeFactory;
 import processamento.Acessorios;
 
 public class salvarDados {
 
-    public static BigDecimal salvarCabecalhoDados(
+    public static BigDecimal salvaCabecalhoNota(
     		EntityFacade dwf,
     		BigDecimal codEmp,
     		BigDecimal codParc,
@@ -71,7 +68,7 @@ public class salvarDados {
 	 * @param codLic Cód. Licitação
 	 * @throws Exception Exceção
 	 */
-    public static void salvarItensDados(
+    public static void salvaItemNota(
     		EntityFacade dwfFacade,
     		BigDecimal nuNota,
     		BigDecimal codProd,
@@ -123,7 +120,7 @@ public class salvarDados {
 
 	}
     
-    public static void insertComponentes(BigDecimal codLic,JdbcWrapper jdbc) throws Exception {
+    public static void insereAcessorios(BigDecimal codLic, JdbcWrapper jdbc) throws Exception {
 
     	String insertSql = "insert into AD_LICITACAOCOMPONENTES(CODLICCOM,CODLIC,CODPROD,QTDNEG,CODVOL,CUSTO,MARKUPFATOR,VLRUNIT)\r\n"
     			+ "  (select rownum,CODLIC,CODMATPRIMA,QTDNEG,CODVOL,CUSTOMATERIAPRIMA,MARKUPFATOR,VLRUNIT from\n" +
@@ -174,7 +171,7 @@ public class salvarDados {
 			if(!(qtdNeg.doubleValue()>0)) qtdNeg = BigDecimal.ONE;
 
 
-			Acessorios.salvarAcessoriosDados(nuNota,codProd,qtdNeg,codVol,vlrUnit,vlrTot,codEmp,codLicCom,codLic);
+			Acessorios.insereAcessorios(nuNota,codProd,qtdNeg,codVol,vlrUnit,vlrTot,codEmp,codLicCom,codLic);
 
 		}
 

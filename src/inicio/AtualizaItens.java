@@ -9,28 +9,23 @@ import br.com.sankhya.jape.dao.JdbcWrapper;
 import br.com.sankhya.jape.event.PersistenceEvent;
 import br.com.sankhya.jape.event.TransactionContext;
 import br.com.sankhya.jape.vo.DynamicVO;
-import br.com.sankhya.modelcore.MGEModelException;
-import br.com.sankhya.modelcore.comercial.impostos.ImpostosHelpper;
 import br.com.sankhya.modelcore.util.EntityFacadeFactory;
 import consultas.consultasDados;
-import processamento.Impostos;
-import processamento.deleteItens;
-import processamento.insertItens;
-import processamento.updateItens;
+import processamento.*;
 import save.salvarDados;
 
-public class atualizarItens implements EventoProgramavelJava {
+public class AtualizaItens implements EventoProgramavelJava {
 
 	@Override
 	public void afterDelete(PersistenceEvent arg0) throws Exception {
 
-		deleteItens.atualizarTotal(arg0);
+		ItensLicitacao.atualizaTotal(arg0);
 	}
 
 	@Override
 	public void afterInsert(PersistenceEvent arg0) throws Exception {
 
-		insertItens.atualizarCusto(arg0);
+		ItensLicitacao.insereItem(arg0);
 		EntityFacade dwfFacade = EntityFacadeFactory.getDWFFacade();
 		JdbcWrapper jdbc = dwfFacade.getJdbcWrapper();
 		jdbc.openSession();
@@ -68,7 +63,7 @@ public class atualizarItens implements EventoProgramavelJava {
 		JdbcWrapper jdbc = EntityFacadeFactory.getDWFFacade().getJdbcWrapper();
 		jdbc.openSession();
 
-		salvarDados.insertComponentes((BigDecimal) arg0.getEntityProperty("CODLIC"), jdbc);
+		salvarDados.insereAcessorios((BigDecimal) arg0.getEntityProperty("CODLIC"), jdbc);
 		Impostos.recalculaImpostos((BigDecimal) arg0.getEntityProperty("CODLIC"));
 
 		jdbc.closeSession();
@@ -96,19 +91,19 @@ public class atualizarItens implements EventoProgramavelJava {
 	public void beforeUpdate(PersistenceEvent arg0) throws Exception {
 
 		if (arg0.getModifingFields().isModifing("QTDE")) {
-			updateItens.atualizarQtdNeg(arg0);
+			ItensLicitacao.atualizaQtdNeg(arg0);
 		}
 
 		if (arg0.getModifingFields().isModifing("CUSTO") || arg0.getModifingFields().isModifing("MARKUPFATOR")) {
-			updateItens.atualizarCustoProduto(arg0);
+			ItensLicitacao.atualizaCusto(arg0);
 		}
 
 		if (arg0.getModifingFields().isModifing("VLRUNIT")) {
-			updateItens.atualizarVlrUnit(arg0);
+			ItensLicitacao.atualizaVlrUnit(arg0);
 		}
 
 		if (arg0.getModifingFields().isModifing("UNID")) {
-			updateItens.atualizarCustoVolume(arg0);
+			ItensLicitacao.atualizaCustoVolume(arg0);
 		}
 
 

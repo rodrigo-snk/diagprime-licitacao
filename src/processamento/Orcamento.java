@@ -8,7 +8,7 @@ import br.com.sankhya.jape.dao.JdbcWrapper;
 import br.com.sankhya.modelcore.util.EntityFacadeFactory;
 import save.salvarDadosEmpenho;
 
-public class gerarOrcamento {
+public class Orcamento {
 
 	public static void atualizandoContrato(BigDecimal nuNota, BigDecimal numContrato, BigDecimal codEmp,BigDecimal codNat) throws Exception {
 		
@@ -27,14 +27,14 @@ public class gerarOrcamento {
 				+ "ite.QTDNEG,\r\n"
 				+ "COALESCE(QTDEPREVISTA,0) AS  QTDEPREVISTA\r\n"
 				+ "from\r\n"
-				+ "			tgfcab cab inner join \r\n"
-				+ "			tgfite ite on ite.nunota = cab.nunota and ite.codemp = cab.codemp left join\r\n"
-				+ "			TCSPSC itecontrato on itecontrato.codprod = ite.codprod and cab.numcontrato = itecontrato.numcontrato  LEFT JOIN\r\n"
-				+ "			(select count(NUNOTA) as total,numcontrato from TGFCAB group by numcontrato)novo  on novo.numcontrato = cab.numcontrato \r\n"
-				+ "			where cab.nunota = "+nuNota+" AND CODTIPOPER IN (SELECT TOP.CODTIPOPER FROM TGFTOP TOP INNER JOIN\r\n"
-						+ "					(select max(dhalter) as data,codtipoper from tgftop  group by codtipoper)TIPOPER ON \r\n"
-						+ "					TOP.CODTIPOPER = TIPOPER.CODTIPOPER AND TOP.dhalter = TIPOPER.data\r\n"
-						+ "					WHERE  ad_GERAR_CONTRATO = 'S') and total>1";
+				+ "tgfcab cab inner join \r\n"
+				+ "tgfite ite on ite.nunota = cab.nunota and ite.codemp = cab.codemp left join\r\n"
+				+ "TCSPSC itecontrato on itecontrato.codprod = ite.codprod and cab.numcontrato = itecontrato.numcontrato  LEFT JOIN\r\n"
+				+ "(select count(NUNOTA) as total,numcontrato from TGFCAB group by numcontrato)novo  on novo.numcontrato = cab.numcontrato \r\n"
+				+ "where cab.nunota = "+nuNota+" AND CODTIPOPER IN (SELECT TOP.CODTIPOPER FROM TGFTOP TOP INNER JOIN\r\n"
+				+ "(select max(dhalter) as data,codtipoper from tgftop  group by codtipoper)TIPOPER ON \r\n"
+				+ "TOP.CODTIPOPER = TIPOPER.CODTIPOPER AND TOP.dhalter = TIPOPER.data\r\n"
+				+ "WHERE  ad_GERAR_CONTRATO = 'S') and total>1";
 		
 		
 		PreparedStatement pstmt = jdbcWrapper.getPreparedStatement(selectItens);
@@ -74,7 +74,7 @@ public class gerarOrcamento {
 					 pstmt = jdbcWrapper.getPreparedStatement(insertCodProd);
 		  			 pstmt.executeUpdate();
 		  	  
-		  			salvarDadosEmpenho.gerarEmpenho(
+		  			Empenho.geraEmpenho(
 		  					dwf, 
 		  					codProd1,
 							codVol,

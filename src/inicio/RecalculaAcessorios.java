@@ -13,7 +13,7 @@ import br.com.sankhya.modelcore.comercial.impostos.ImpostosHelpper;
 import br.com.sankhya.modelcore.util.EntityFacadeFactory;
 import save.salvarDados;
 
-public class recalculoComponentes implements AcaoRotinaJava {
+public class RecalculaAcessorios implements AcaoRotinaJava {
 
 	@Override
 	public void doAction(ContextoAcao arg0) throws Exception {
@@ -37,7 +37,7 @@ public class recalculoComponentes implements AcaoRotinaJava {
 		}
 
 
-		salvarDados.insertComponentes(codLic, jdbc);
+		salvarDados.insereAcessorios(codLic, jdbc);
 		jdbc.closeSession();
 		arg0.setMensagemRetorno("Recalculado com sucesso");
 	}

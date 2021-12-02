@@ -11,9 +11,9 @@ import br.com.sankhya.jape.EntityFacade;
 import br.com.sankhya.jape.dao.JdbcWrapper;
 import br.com.sankhya.modelcore.util.EntityFacadeFactory;
 import consultas.consultasDados;
-import processamento.empenhoFuncionalidades;
+import processamento.Empenho;
 
-public class lancarEmpenhoTodos implements AcaoRotinaJava {
+public class LancaEmpenhoTodos implements AcaoRotinaJava {
 
 	@Override
 	public void doAction(ContextoAcao arg0) throws Exception {
@@ -49,7 +49,7 @@ public class lancarEmpenhoTodos implements AcaoRotinaJava {
 			ResultSet rs = pstmt.executeQuery();
 
 			if (rs.next()) {
-				empenhoFuncionalidades.liberarEmpenhoTodos(arg0, numContrato, empenho);
+				Empenho.liberarEmpenhoTodos(arg0, numContrato, empenho);
 		 
 	  	    	/*EntityFacade dwf,
 	    		ContextoAcao arg0,
