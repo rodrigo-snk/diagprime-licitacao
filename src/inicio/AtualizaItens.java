@@ -8,18 +8,33 @@ import br.com.sankhya.jape.EntityFacade;
 import br.com.sankhya.jape.dao.JdbcWrapper;
 import br.com.sankhya.jape.event.PersistenceEvent;
 import br.com.sankhya.jape.event.TransactionContext;
+import br.com.sankhya.jape.util.FinderWrapper;
 import br.com.sankhya.jape.vo.DynamicVO;
+import br.com.sankhya.modelcore.util.DynamicEntityNames;
 import br.com.sankhya.modelcore.util.EntityFacadeFactory;
 import consultas.consultasDados;
 import processamento.*;
 import save.salvarDados;
 
+import static processamento.Licitacao.excluiReferencias;
+
 public class AtualizaItens implements EventoProgramavelJava {
 
 	@Override
 	public void afterDelete(PersistenceEvent arg0) throws Exception {
+		EntityFacade dwf = EntityFacadeFactory.getDWFFacade();
+		JdbcWrapper jdbc = dwf.getJdbcWrapper();
+		jdbc.openSession();
 
 		ItensLicitacao.atualizaTotal(arg0);
+
+		salvarDados.insereAcessorios((BigDecimal) arg0.getEntityProperty("CODLIC"), jdbc);
+
+		DynamicVO licitacaoVO = (DynamicVO) dwf.findEntityByPrimaryKeyAsVO("AD_LICITACAO", arg0.getEntityProperty("CODLIC"));
+		Licitacao.atualizaImpostosFederais(licitacaoVO);
+
+		jdbc.closeSession();
+
 	}
 
 	@Override
@@ -39,7 +54,6 @@ public class AtualizaItens implements EventoProgramavelJava {
   		ResultSet rs = pstmt.executeQuery();
 			 
   	    while(rs.next()) {
-  	    	
   	    	final String AD_DESCRITIVO = rs.getString("AD_DESCRITIVO");
 			final String AD_PROCEDENCIA = rs.getString("AD_PROCEDENCIA");
 			final String MARCA = rs.getString("MARCA");
@@ -53,18 +67,22 @@ public class AtualizaItens implements EventoProgramavelJava {
   			pstmt = jdbc.getPreparedStatement(updateItens);
   	  		pstmt.executeUpdate();
 		}
-			jdbc.closeSession();
-
+		jdbc.closeSession();
 	}
 
 	@Override
 	public void afterUpdate(PersistenceEvent arg0) throws Exception {
-
-		JdbcWrapper jdbc = EntityFacadeFactory.getDWFFacade().getJdbcWrapper();
+		EntityFacade dwf = EntityFacadeFactory.getDWFFacade();
+		JdbcWrapper jdbc = dwf.getJdbcWrapper();
 		jdbc.openSession();
 
-		salvarDados.insereAcessorios((BigDecimal) arg0.getEntityProperty("CODLIC"), jdbc);
+		if (!dwf.findByDynamicFinderAsVO(new FinderWrapper(DynamicEntityNames.ITEM_COMPOSICAO_PRODUTO, "this.CODPROD = ?", arg0.getEntityProperty("CODPROD"))).isEmpty()) {
+			salvarDados.insereAcessorios((BigDecimal) arg0.getEntityProperty("CODLIC"), jdbc);
+		}
+
 		Impostos.recalculaImpostos((BigDecimal) arg0.getEntityProperty("CODLIC"));
+		DynamicVO licitacaoVO = (DynamicVO) dwf.findEntityByPrimaryKeyAsVO("AD_LICITACAO", arg0.getEntityProperty("CODLIC"));
+		Licitacao.atualizaImpostosFederais(licitacaoVO);
 
 		jdbc.closeSession();
 
@@ -77,9 +95,19 @@ public class AtualizaItens implements EventoProgramavelJava {
 
 	@Override
 	public void beforeDelete(PersistenceEvent arg0) throws Exception {
-		// TODO Auto-generated method stub
+		EntityFacade dwf = EntityFacadeFactory.getDWFFacade();
+		JdbcWrapper jdbc = dwf.getJdbcWrapper();
+		jdbc.openSession();
 
+		DynamicVO licitacaoVO = (DynamicVO) dwf.findEntityByPrimaryKeyAsVO("AD_LICITACAO", arg0.getEntityProperty("CODLIC"));
+
+		// Deleta as referencias da pré-proposta
+		excluiReferencias(jdbc, licitacaoVO.asBigDecimalOrZero("NUNOTA"));
+
+		jdbc.closeSession();
 	}
+
+
 
 	@Override
 	public void beforeInsert(PersistenceEvent arg0) throws Exception {

@@ -5,12 +5,16 @@ import br.com.sankhya.jape.PersistenceException;
 import br.com.sankhya.jape.core.JapeSession;
 import br.com.sankhya.jape.dao.JdbcWrapper;
 import br.com.sankhya.jape.event.PersistenceEvent;
+import br.com.sankhya.jape.util.FinderWrapper;
 import br.com.sankhya.jape.vo.DynamicVO;
 import br.com.sankhya.jape.wrapper.JapeFactory;
 import br.com.sankhya.modelcore.MGEModelException;
 import br.com.sankhya.modelcore.comercial.ComercialUtils;
 import br.com.sankhya.modelcore.comercial.impostos.ImpostosHelpper;
+import br.com.sankhya.modelcore.util.DynamicEntityNames;
 import br.com.sankhya.modelcore.util.EntityFacadeFactory;
+import br.com.sankhya.modelcore.util.ProdutoUtils;
+import com.sankhya.util.StringUtils;
 import consultas.consultasDados;
 import save.salvarDados;
 
@@ -43,6 +47,7 @@ public class ItensLicitacao {
         EntityFacade dwf = EntityFacadeFactory.getDWFFacade();
         JdbcWrapper jdbcWrapper = dwf.getJdbcWrapper();
         jdbcWrapper.openSession();
+
 
         String update = "UPDATE AD_ITENSLICITACAO SET CUSTO="+custo+",VLRTOTAL="+vlrTotal+",VLRUNIT="+vlrUnit+", MARKUPFATOR = " +markupFator+
                 " where CODITELIC="+codIteLic+"  and CODLIC="+codLic;
@@ -97,7 +102,6 @@ public class ItensLicitacao {
                 custo = custo.multiply(quantidade);
                 qtdNeg = qtdNeg.multiply(quantidade);
                 vlrUnit = custo.multiply(markupFator).divide(quantidade, MathContext.DECIMAL128);
-
             }
             else if (divideOuMultiplica.equalsIgnoreCase("D")) {
                 custo = custo.divide(quantidade, MathContext.DECIMAL128);
@@ -109,9 +113,8 @@ public class ItensLicitacao {
         //Valores convertidos
         //vlrUnit = custo.multiply(markupFator);
         BigDecimal vlrTot = vlrUnit.multiply(qtdNeg);
-        markupFator = vlrUnit.divide(custo, MathContext.DECIMAL128);
 
-        ItensLicitacao.atualizaItemLic(codLic, codIteLic, custo, vlrTot, markupFator, custo);
+        ItensLicitacao.atualizaItemLic(codLic, codIteLic, custo.multiply(markupFator), vlrTot, markupFator, custo);
 
         final String updateIte = "UPDATE TGFITE SET QTDNEG="+qtdNeg+",VLRTOT="+vlrTot+",VLRUNIT="+vlrUnit+", CODVOL= '"+codVol+"' where AD_CODITELIC="+codIteLic+" and AD_CODLIC="+codLic;
         pstmt = jdbcWrapper.getPreparedStatement(updateIte);
@@ -327,18 +330,11 @@ public class ItensLicitacao {
             qtdNeg = BigDecimal.ONE;
         }
 
-        final String consultaDados = "SELECT coalesce(CUSGER,0) as CUSGER FROM TGFCUS WHERE CODPROD = "+codProd+" AND DTATUAL IN (\r\n"
-                + "select MAX(DTATUAL) AS VALOR from TGFCUS WHERE CODPROD = "+codProd+")";
+        BigDecimal custo = ComercialUtils.obtemPrecoCusto("L", " ", BigDecimal.ONE, BigDecimal.ZERO,codProd);
 
-        PreparedStatement pstmt = jdbcWrapper.getPreparedStatement(consultaDados);
-        ResultSet rs = pstmt.executeQuery();
-        BigDecimal custo = BigDecimal.ZERO;
-        while(rs.next()){
-            custo = rs.getBigDecimal("CUSGER");
-        }
 
         if(!(custo.intValue()>0)) {
-            throw new PersistenceException("Custo do produto obrigatório, não encontrado ou está zerado o custo, no cadastro de custo "+consultaDados);
+            throw new PersistenceException("Custo do produto obrigatório, não encontrado ou está zerado o custo, no cadastro de custo.");
         }
         vlrUnit = custo.multiply(markupFator);
         vlrTot = vlrUnit.multiply(qtdNeg);
@@ -349,8 +345,8 @@ public class ItensLicitacao {
         updateValidando.executeUpdate();
 
         String consultaCabecalho = "select codemp,nunota,codlic from ad_licitacao  where codlic="+codLic;
-        pstmt = jdbcWrapper.getPreparedStatement(consultaCabecalho);
-        rs = pstmt.executeQuery();
+        PreparedStatement pstmt = jdbcWrapper.getPreparedStatement(consultaCabecalho);
+        ResultSet rs = pstmt.executeQuery();
 
         while(rs.next()){
 
@@ -395,8 +391,9 @@ public class ItensLicitacao {
         BigDecimal item = itemVO.asBigDecimalOrZero("ITEM");
         BigDecimal markupFator = itemVO.asBigDecimalOrZero("MARKUPFATOR");
         String codVol = itemVO.asString("UNID");
-        BigDecimal replicando = itemVO.asBigDecimalOrZero("REPLICANDO");
+        String loteGrupo = StringUtils.getNullAsEmpty(itemVO.asString("LOTEGRUPO"));
 
+        BigDecimal replicando = itemVO.asBigDecimalOrZero("REPLICANDO");
 
         if (markupFator.compareTo(BigDecimal.ZERO) <= 0) {
             markupFator = BigDecimal.ONE;
@@ -412,22 +409,10 @@ public class ItensLicitacao {
         boolean isServico = false;
         while(rs.next()) isServico = rs.getString("USOPROD").equals("S");
 
-        final String consultaDados = "SELECT coalesce(CUSGER,0) as CUSGER FROM TGFCUS WHERE CODPROD = "+codProd+" AND DTATUAL IN (\r\n"
-                + "select MAX(CN.DTATUAL) AS VALOR from TGFCUS CN WHERE CN.CODPROD = "+codProd+")";
-
-        pstmt = jdbcWrapper.getPreparedStatement(consultaDados);
-        rs = pstmt.executeQuery();
-        BigDecimal custo = BigDecimal.ZERO;
-
-        BigDecimal custo2 = ComercialUtils.obtemPrecoCusto("G", " ", BigDecimal.ONE, BigDecimal.ZERO, codProd);
-
-
-        while(rs.next()) {
-            custo = (rs.getBigDecimal("CUSGER") == null) ? BigDecimal.ONE : rs.getBigDecimal("CUSGER");
-        }
+        BigDecimal custo = ComercialUtils.obtemPrecoCusto("L", " ", BigDecimal.ONE, BigDecimal.ZERO, codProd);
 
         if(!(custo.intValue() > 0) && !isServico) {
-            throw new PersistenceException("Custo do produto obrigatório, não encontrado ou está zerado o custo, no cadastro de custo "+consultaDados);
+            throw new PersistenceException("Custo do produto obrigatório, não encontrado ou está zerado o custo, no cadastro de custo.");
         }
 
         //VERIFICAR NECESSIDADE
@@ -448,7 +433,7 @@ public class ItensLicitacao {
 
         } else {
             //Quando esta replicando entra aqui
-            update = "UPDATE AD_ITENSLICITACAO SET REPLICANDO=0 WHERE CODITELIC="+codIteLic+" AND CODLIC="+codLic;
+            update = "UPDATE AD_ITENSLICITACAO SET REPLICANDO = 0 WHERE CODITELIC = "+codIteLic+" AND CODLIC = "+codLic;
         }
 
         pstmt = jdbcWrapper.getPreparedStatement(update);
@@ -483,17 +468,22 @@ public class ItensLicitacao {
         //vlrUnit = custo.multiply(markupFator);
         vlrTot = vlrUnit.multiply(qtdNeg);
 
-        ItensLicitacao.atualizaItemLic(codLic, codIteLic, custo, vlrTot, markupFator, custo);
-
+        ItensLicitacao.atualizaItemLic(codLic, codIteLic, custo.multiply(markupFator), vlrTot, markupFator, custo);
         //pstmt.executeUpdate("UPDATE AD_ITENSLICITACAO SET CUSTO="+custo+", VLRUNIT = "+custo.multiply(markupFator)+", VLRTOTAL = "+vlrTot.multiply(qtdNeg.multiply(volumeAlternativo.getQtdVolAlternativo()))+" where CODITELIC="+codIteLic+" and CODLIC="+codLic);
 
-        salvarDados.salvaItemNota(dwf,nuNota,codProd,qtdNeg,codVol,vlrUnit,vlrTot,codEmp,codIteLic,codLic);
+        salvarDados.salvaItemNota(dwf,nuNota,codProd,qtdNeg,codVol,vlrUnit,vlrTot,codEmp,codIteLic,codLic, loteGrupo);
 
         ImpostosHelpper impostos = new ImpostosHelpper();
         impostos.setForcarRecalculo(true);
         impostos.calcularImpostos(nuNota);
 
-        salvarDados.insereAcessorios(codLic, jdbcWrapper);
+
+
+        if (!dwf.findByDynamicFinderAsVO(new FinderWrapper(DynamicEntityNames.ITEM_COMPOSICAO_PRODUTO, "this.CODPROD = ?", codProd)).isEmpty()) {
+             salvarDados.insereAcessorios(codLic, jdbcWrapper);
+         }
+
+
         jdbcWrapper.closeSession();
     }
 
@@ -516,6 +506,8 @@ public class ItensLicitacao {
         BigDecimal nuNota = licitacaoVO.asBigDecimal("NUNOTA");
         BigDecimal codEmp = licitacaoVO.asBigDecimal("CODEMP");
 
+
+        Licitacao.excluiReferencias(jdbcWrapper, nuNota);
         String update = "DELETE FROM TGFITE WHERE NUNOTA="+nuNota+" AND AD_CODITELIC="+codIteLic+" and CODPROD="+codProd;
         PreparedStatement pstmt = jdbcWrapper.getPreparedStatement(update);
         pstmt.executeUpdate();

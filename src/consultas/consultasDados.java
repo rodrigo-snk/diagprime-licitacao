@@ -1,5 +1,7 @@
 package consultas;
 
+import java.math.BigDecimal;
+
 public class consultasDados {
 	
 	
@@ -22,16 +24,17 @@ public class consultasDados {
 		return "select CODEMP,CODPARC,AD_CODTIPOPER,CODTIPVENDA,CODNAT,CODCENCUS,CODPROJ FROM TCSCON WHERE NUMCONTRATO = "+numContrato;
 	}
 	
-	public static String retornaDadosItens(String codProd,String numContrato) {
+	public static String retornaDadosItens(BigDecimal codProd, BigDecimal numContrato, BigDecimal nuNota, BigDecimal sequencia) {
 
-		return "SELECT PRO.CODPROD, PRO.CODLOCALPADRAO, PSC.VLRUNIT, ITEM.CODVOL \r\n"
-		+ "FROM TGFPRO PRO\r\n"
-		+ "INNER JOIN TCSPSC PSC ON  PRO.CODPROD = PSC.CODPROD\r\n"
-		+ "INNER JOIN AD_ITENSEMPENHO ITEM ON PSC.CODPROD = ITEM.CODPROD AND PSC.NUMCONTRATO = ITEM.NUMCONTRATO\r\n"
-		+ "WHERE PSC.CODPROD = "+codProd+" AND PSC.NUMCONTRATO="+numContrato;
+		return "SELECT ITE.CODPROD, SUM(QTDNEG) QTDNEG, PRO.CODLOCALPADRAO, AVG(ITE.VLRUNIT) VLRUNIT, ITE.CODVOL, ITE.AD_LOTEGRUPO\n" +
+				"FROM TGFCAB CAB \n" +
+				"INNER JOIN TGFITE ITE ON CAB.NUNOTA = ITE.NUNOTA\n" +
+				"INNER JOIN TGFPRO PRO ON ITE.CODPROD = PRO.CODPROD\n" +
+				"WHERE ITE.CODPROD = "+codProd.toString()+" AND CAB.NUMCONTRATO= "+numContrato.toString()+" AND ITE.NUNOTA="+nuNota.toString()+" AND ITE.SEQUENCIA = "+sequencia.toString()+"\n" +
+				"GROUP BY ITE.CODPROD, ITE.CODVOL, PRO.CODLOCALPADRAO";
 	}
 	
-	public static String retornaDadosItensPedidos(String codProd,String numContrato) {
+	public static String retornaDadosItensPedidos(String codProd,String numContrato, String codVol) {
 
 		return "SELECT \r\n"
 				+ "A.CODPROD,CODLOCALPADRAO, itens.CODVOL,itens.VLRUNIT\r\n"
@@ -43,7 +46,7 @@ public class consultasDados {
 				+ "where  b.nunota in (SELECT distinct  a.nunotaorig FROM TGFVAR a inner join \r\n"
 				+ "tgfvar b on  a.nunota = b.nunotaorig inner join \r\n"
 				+ "tgfcab c on c.nunota = b.nunota \r\n"
-				+ "where c.numcontrato="+numContrato+") \r\n"
+				+ "where c.numcontrato="+numContrato+" AND A.UNID = '"+codVol+"') \r\n"
 				+ "UNION ALL \r\n"
 				+ "select VLRUNIT,CODPROD,CODVOL from AD_LICITACAOCOMPONENTES A INNER JOIN \r\n"
 				+ "AD_LICITACAO b ON b.codlic = A.codlic \r\n"

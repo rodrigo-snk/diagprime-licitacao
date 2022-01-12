@@ -13,10 +13,6 @@ import br.com.sankhya.modelcore.comercial.impostos.ImpostosHelpper;
 import br.com.sankhya.modelcore.dwfdata.vo.CabecalhoNotaVO;
 import br.com.sankhya.modelcore.dwfdata.vo.ItemNotaVO;
 import br.com.sankhya.modelcore.util.EntityFacadeFactory;
-import com.hazelcast.org.apache.calcite.avatica.proto.Requests;
-import com.hazelcast.org.apache.calcite.prepare.Prepare;
-import oracle.jdbc.proxy.annotation.Pre;
-import org.h2.command.Prepared;
 
 import javax.mail.FetchProfile;
 import java.math.BigDecimal;
@@ -49,13 +45,12 @@ public class Acessorios {
 
             BigDecimal nuNota = consultaCabecalho2.getBigDecimal("NUNOTA");
 
+            Licitacao.excluiReferencias(jdbcWrapper, nuNota);
             String update = "DELETE FROM TGFITE WHERE NUNOTA="+nuNota+" AND AD_CODLICCOM="+codLicCom+" and CODPROD="+codProd;
             PreparedStatement  updateValidando = jdbcWrapper.getPreparedStatement(update);
             updateValidando.executeUpdate();
 
-            ImpostosHelpper impostos = new ImpostosHelpper();
-            impostos.setForcarRecalculo(true);
-            impostos.calcularImpostos(nuNota);
+            Impostos.recalculaImpostos(codLic);
 
         }
 
@@ -84,7 +79,8 @@ public class Acessorios {
             BigDecimal vlrTot,
             BigDecimal codEmp,
             BigDecimal codLicCom,
-            BigDecimal codLic) throws Exception {
+            BigDecimal codLic,
+            String loteGrupo) throws Exception {
 
         EntityFacade dwfFacade = EntityFacadeFactory.getDWFFacade();
         JdbcWrapper jdbc = dwfFacade.getJdbcWrapper();
@@ -93,7 +89,6 @@ public class Acessorios {
         //Conversão de unidades
         PreparedStatement pstmt = jdbc.getPreparedStatement("SELECT DIVIDEMULTIPLICA,MULTIPVLR,QUANTIDADE FROM TGFVOA WHERE CODPROD = "+codProd+" and CODVOL = '"+codVol+"'");
         ResultSet rs = pstmt.executeQuery();
-
 
         if(rs.next()){
 
@@ -120,12 +115,13 @@ public class Acessorios {
         itemVO.setCODVOL(codVol);
         itemVO.setVLRUNIT(vlrUnit);
         itemVO.setVLRTOT(vlrTot);
-        itemVO.setUSOPROD("R");
+        itemVO.setUSOPROD("D");
         itemVO.setRESERVA("N");
         itemVO.setATUALESTOQUE(BigDecimal.ZERO);
         itemVO.setProperty("AD_CODLICCOM", codLicCom);
         itemVO.setProperty("AD_CODLIC", codLic);
         itemVO.setProperty("AD_ACESSORIOS", "S");
+        itemVO.setProperty("AD_LOTEGRUPO", loteGrupo);
 
         Collection<ItemNotaVO> itens = new ArrayList<>();
         itens.add(itemVO);
@@ -176,7 +172,6 @@ public class Acessorios {
             updateAcessorio.executeUpdate();
 
             jdbcWrapper.closeSession();
-
 
     }
 }

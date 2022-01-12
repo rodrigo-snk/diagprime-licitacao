@@ -26,6 +26,7 @@ public class Empenho {
 			BigDecimal codNat,
 			BigDecimal codCencus,
 			BigDecimal codProj,
+			BigDecimal codVend,
 			BigDecimal vlrNota,
 			BigDecimal numContrato,
 			String empenho) throws Exception {
@@ -42,6 +43,7 @@ public class Empenho {
 		cabVO.setProperty("CODNAT", codNat);
 		cabVO.setProperty("CODCENCUS", codCencus);
 		cabVO.setProperty("CODPROJ", codProj);
+		cabVO.setProperty("CODVEND", codVend);
 		cabVO.setProperty("VLRNOTA", vlrNota);
 		cabVO.setProperty("AD_EMPENHO", empenho);
 		cabVO.setProperty("NUMCONTRATO", numContrato);
@@ -49,7 +51,6 @@ public class Empenho {
 		cabVO.setProperty("NUMNOTA", BigDecimal.ZERO);
 		dwf.createEntity("CabecalhoNota", (EntityVO)cabVO);
 		return cabVO.asBigDecimal("NUNOTA");
-
 	}
 
 	public static void salvaItemNota(
@@ -60,7 +61,8 @@ public class Empenho {
 			BigDecimal qtdNeg,
 			String codVol,
 			BigDecimal vlrUnit,
-			BigDecimal vlrTot) throws Exception {
+			BigDecimal vlrTot,
+			String atualEst) throws Exception {
 
 		DynamicVO itemVO = (DynamicVO) dwf.getDefaultValueObjectInstance("ItemNota");
 		itemVO.setProperty("NUNOTA", nuNota);
@@ -73,8 +75,13 @@ public class Empenho {
 		itemVO.setProperty("VLRTOT", vlrTot);
 		// itemVO.setProperty("NUTAB", nuTab);
 		itemVO.setProperty("USOPROD", "P");
-		itemVO.setProperty("RESERVA", "N");
-		itemVO.setProperty("ATUALESTOQUE", new BigDecimal(0));
+		if (atualEst.equalsIgnoreCase("N")) {
+			itemVO.setProperty("ATUALESTOQUE", BigDecimal.ZERO);
+			itemVO.setProperty("RESERVA", "N");
+		} else {
+			itemVO.setProperty("ATUALESTOQUE", BigDecimal.ONE);
+			itemVO.setProperty("RESERVA", "S");
+		}
 		//itemVO.setProperty("CODLOCALORIG", codLocal);
 		dwf.createEntity("ItemNota", (EntityVO)itemVO);
 
@@ -128,11 +135,13 @@ public class Empenho {
 			BigDecimal codProd,
 			String codVol,
 			BigDecimal numContrato,
+			BigDecimal nuNota,
+			BigDecimal sequencia,
 			BigDecimal codParc,
 			BigDecimal qtdDisponivel,
-			BigDecimal qtdLiberar,
 			String empenho,
-			BigDecimal adDisponivel) throws Exception {
+			BigDecimal adDisponivel,
+			String loteGrupo) throws Exception {
 
 		DynamicVO itemVO = (DynamicVO)dwf.getDefaultValueObjectInstance("AD_ITENSEMPENHO");
 		ComercialUtils.MontantesVolumeAlternativo volumeAlternativo = ComercialUtils.calcularVolumeAlternativo(codProd, codVol, " ", qtdDisponivel, BigDecimal.ZERO);
@@ -141,6 +150,9 @@ public class Empenho {
 		itemVO.setProperty("CODPROD", codProd);
 		itemVO.setProperty("CODVOL", codVol);
 		itemVO.setProperty("NUMCONTRATO", numContrato);
+		itemVO.setProperty("NUNOTA", nuNota);
+		itemVO.setProperty("SEQUENCIA", sequencia);
+		itemVO.setProperty("LOTEGRUPO", loteGrupo);
 		// itemVO.setProperty("CODPARC", codParc);
 		itemVO.setProperty("QTDDISPONIVEL", volumeAlternativo.getQtdVolAlternativo());
 		itemVO.setProperty("QTDLIBERAR", BigDecimal.ZERO);
@@ -157,7 +169,9 @@ public class Empenho {
 			BigDecimal numContrato,
 			BigDecimal qtdDisponivel,
 			BigDecimal qtdLiberada,
-			String empenho) throws Exception {
+			String empenho,
+			BigDecimal codVend,
+			String loteGrupo) throws Exception {
 
 		DynamicVO itemVO = (DynamicVO)dwf.getDefaultValueObjectInstance("AD_CONVERTEREMPENHO");
 		ComercialUtils.MontantesVolumeAlternativo volumeAlternativo = ComercialUtils.calcularVolumeAlternativo(codProd, codVol, " ", qtdDisponivel, BigDecimal.ZERO);
@@ -168,20 +182,22 @@ public class Empenho {
 		itemVO.setProperty("QTDLIBERAR", BigDecimal.ZERO);
 		itemVO.setProperty("EMPENHO", empenho);
 		itemVO.setProperty("QTDLIBERADA", qtdLiberada);
+		itemVO.setProperty("CODVEND", codVend);
+		itemVO.setProperty("LOTEGRUPO", loteGrupo);
 		dwf.createEntity("AD_CONVERTEREMPENHO", (EntityVO) itemVO);
 	}
 
-	public static void liberarEmpenho(ContextoAcao arg0,BigDecimal contrato,String empenho) throws Exception {
+	/*public static void liberarEmpenho(BigDecimal numContrato,String empenho) throws Exception {
 
 		EntityFacade dwf = EntityFacadeFactory.getDWFFacade();
 		JdbcWrapper jdbc = dwf.getJdbcWrapper();
 		jdbc.openSession();
 		
-		String deleteEmpenho = "delete from AD_EMPENHO where NUMCONTRATO="+contrato;
+		String deleteEmpenho = "delete from AD_EMPENHO where NUMCONTRATO="+numContrato;
 				PreparedStatement  consultaParEmepenho = jdbc.getPreparedStatement(deleteEmpenho);
 				consultaParEmepenho.execute();
 
-		String consulta = consultasEmpenho.empenhoConsulta(""+contrato);
+		String consulta = consultasEmpenho.empenhoConsulta(""+numContrato);
 		PreparedStatement pstmt = jdbc.getPreparedStatement(consulta);
 		ResultSet rs = pstmt.executeQuery();
 		while(rs.next()) {
@@ -195,7 +211,9 @@ public class Empenho {
 					dwf, 
 					codProd,
 					codVol,
-					contrato, 
+					numContrato,
+					nuNota,
+					sequencia,
 					codParc,
 					qtdDisponivel,
 					BigDecimal.ZERO, 
@@ -204,9 +222,9 @@ public class Empenho {
 		}
 		
 		jdbc.closeSession();
-	}
+	}*/
 	
-	public static void liberarEmpenhoTodos(ContextoAcao arg0,BigDecimal contrato,String empenho) throws Exception {
+	public static void liberarEmpenhoTodos(BigDecimal numContrato,String empenho, BigDecimal codVend) throws Exception {
 
 		EntityFacade dwf = EntityFacadeFactory.getDWFFacade();
 		JdbcWrapper jdbc = dwf.getJdbcWrapper();
@@ -216,19 +234,20 @@ public class Empenho {
 				PreparedStatement  consultaParEmepenho = jdbc.getPreparedStatement(deleteEmpenho);
 				consultaParEmepenho.execute();*/
 
-		String consulta = consultasEmpenho.empenhoConsulta(contrato.toString());
-		PreparedStatement  consultaPar2 = jdbc.getPreparedStatement(consulta);
-		ResultSet retornoParametros12 = consultaPar2.executeQuery();
-		while(retornoParametros12.next()) {
+		String sql = consultasEmpenho.empenhoConsulta(numContrato.toString());
+		PreparedStatement pstmt = jdbc.getPreparedStatement(sql);
+		ResultSet rs = pstmt.executeQuery();
+		while(rs.next()) {
 			
-			BigDecimal codProd = retornoParametros12.getBigDecimal("CODPROD");
-			String codVol = retornoParametros12.getString("CODVOL");
-			BigDecimal codParc = retornoParametros12.getBigDecimal("CODPARC");
-			BigDecimal qtdDisponivel = retornoParametros12.getBigDecimal("QTD_DISPONIVEL");
-			BigDecimal adDisponivel = retornoParametros12.getBigDecimal("AD_DISPONIVEL");
+			BigDecimal codProd = rs.getBigDecimal("CODPROD");
+			String codVol = rs.getString("CODVOL");
+			String loteGrupo = rs.getString("LOTEGRUPO");
+			BigDecimal codParc = rs.getBigDecimal("CODPARC");
+			BigDecimal qtdDisponivel = rs.getBigDecimal("QTD_DISPONIVEL");
+			BigDecimal adDisponivel = rs.getBigDecimal("AD_DISPONIVEL");
 			
 			
-	    		String update1 = "UPDATE AD_ITENSEMPENHO set QTDLIBERAR=0,AD_DISPONIVEL=AD_DISPONIVEL-"+adDisponivel+"  WHERE NUMCONTRATO = "+contrato+" AND CODPROD = "+codProd;
+			String update1 = "UPDATE AD_ITENSEMPENHO set QTDLIBERAR=0,AD_DISPONIVEL=AD_DISPONIVEL-"+adDisponivel+"  WHERE NUMCONTRATO = "+numContrato+" AND CODPROD = "+codProd;
 			PreparedStatement  preUpdt1 = jdbc.getPreparedStatement(update1);
 			preUpdt1.executeUpdate();
 			
@@ -236,10 +255,12 @@ public class Empenho {
             		dwf, 
             		codProd,
 					codVol,
-            		contrato, 
+            		numContrato,
             		adDisponivel,
             		adDisponivel,
-            		empenho);
+            		empenho,
+					codVend,
+					loteGrupo);
             
 			/*salvarDadosEmpenho.gerarEmpenho(
 					dwf, 

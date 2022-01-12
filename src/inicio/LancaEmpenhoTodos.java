@@ -19,6 +19,8 @@ public class LancaEmpenhoTodos implements AcaoRotinaJava {
 	public void doAction(ContextoAcao arg0) throws Exception {
 		//String qtd = ""+arg0.getParam("QUANTIDADE");
 		String empenho = (String) arg0.getParam("EMPENHO");
+		BigDecimal codVend = new BigDecimal(arg0.getParam("CODVEND").toString());
+
 
 		EntityFacade dwf = EntityFacadeFactory.getDWFFacade();
 		JdbcWrapper jdbcWrapper = dwf.getJdbcWrapper();
@@ -49,7 +51,7 @@ public class LancaEmpenhoTodos implements AcaoRotinaJava {
 			ResultSet rs = pstmt.executeQuery();
 
 			if (rs.next()) {
-				Empenho.liberarEmpenhoTodos(arg0, numContrato, empenho);
+				Empenho.liberarEmpenhoTodos(numContrato, empenho, codVend);
 		 
 	  	    	/*EntityFacade dwf,
 	    		ContextoAcao arg0,

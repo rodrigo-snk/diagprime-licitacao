@@ -29,7 +29,7 @@ public class LancaEmpenho implements AcaoRotinaJava {
         Registro[] linhas = arg0.getLinhas();
         BigDecimal codUsuarioLogado = AuthenticationInfo.getCurrent().getUserID();
 
-        //String qtdLiberar = ""+arg0.getParam("QUANTIDADE");
+        //String qtdLiberar = arg0.getParam("QUANTIDADE");
         String empenho = (String) arg0.getParam("EMPENHO");
 
         EntityFacade dwf = EntityFacadeFactory.getDWFFacade();
@@ -38,8 +38,12 @@ public class LancaEmpenho implements AcaoRotinaJava {
 
         BigDecimal qtdDisponivel;
         BigDecimal numContrato;
+        BigDecimal nuNota;
+        BigDecimal sequencia;
         BigDecimal codProd;
         BigDecimal qtdLiberar;
+        String codVol;
+        BigDecimal codVend = new BigDecimal(arg0.getParam("CODVEND").toString());
 
         for (Registro linha: linhas) {
             //qtdDisponivel = (BigDecimal) linha.getCampo("QTDDISPONIVEL");
@@ -54,6 +58,9 @@ public class LancaEmpenho implements AcaoRotinaJava {
                 qtdDisponivel = itemVO.asBigDecimalOrZero("QTDDISPONIVEL");
                 codProd = itemVO.asBigDecimalOrZero("CODPROD");
                 qtdLiberar = itemVO.asBigDecimalOrZero("QTDLIBERAR");
+                codVol = itemVO.asString("CODVOL");
+                sequencia = itemVO.asBigDecimal("SEQUENCIA");
+                nuNota = itemVO.asBigDecimalOrZero("NUNOTA");
                 final boolean qtdLiberarMenorQueDisponivel = qtdLiberar.compareTo(qtdDisponivel) < 0;
 
                 if (qtdLiberarMenorQueDisponivel) {
@@ -91,14 +98,16 @@ public class LancaEmpenho implements AcaoRotinaJava {
                                         empenho);*/
 
 
-                        final String sql = consultasDados.retornaDadosItens(codProd.toString(), numContrato.toString());
+                        final String sql = consultasDados.retornaDadosItens(codProd, numContrato, nuNota, sequencia);
                         pstmt = jdbcWrapper.getPreparedStatement(sql);
                         rs = pstmt.executeQuery();
                         while (rs.next()) {
                             // Unidade padrão do produto
-                            String codVol = rs.getString("CODVOL");
+                            codVol = rs.getString("CODVOL");
                             BigDecimal vlrUnit = rs.getBigDecimal("VLRUNIT");
                             BigDecimal vlrTot = vlrUnit.multiply(qtdLiberar);
+                            String loteGrupo = rs.getString("AD_LOTEGRUPO");
+
 
                                         /*salvarDadosEmpenho.salvarItensDados(
                                         dwf,
@@ -110,13 +119,13 @@ public class LancaEmpenho implements AcaoRotinaJava {
                                         codVol,
                                         new BigDecimal(vlrUnit),
                                         vlrTot);*/
-                            Empenho.geraEmpenhoConvertido(dwf, codProd, codVol, numContrato, qtdLiberar, qtdLiberar, empenho);
+                            Empenho.geraEmpenhoConvertido(dwf, codProd, codVol, numContrato, qtdLiberar, qtdLiberar, empenho, codVend, loteGrupo);
 
                             final String update = "UPDATE TCSPSC set AD_QTDLIBERAR=AD_QTDLIBERAR-" + qtdLiberar + "  WHERE NUMCONTRATO = " + numContrato + " AND CODPROD = " + codProd;
                             pstmt = jdbcWrapper.getPreparedStatement(update);
                             pstmt.executeUpdate();
 
-                            final String update1 = "UPDATE AD_ITENSEMPENHO set QTDLIBERAR = 0, AD_DISPONIVEL = AD_DISPONIVEL-" + qtdLiberar + "  WHERE NUMCONTRATO = " + numContrato + " AND CODPROD = " + codProd;
+                            final String update1 = "UPDATE AD_ITENSEMPENHO set QTDLIBERAR = 0, AD_DISPONIVEL = AD_DISPONIVEL-" + qtdLiberar + "  WHERE NUMCONTRATO = " + numContrato + " AND CODPROD = " + codProd + " AND CODVOL ='" +codVol+"'";
                             pstmt = jdbcWrapper.getPreparedStatement(update1);
                             pstmt.executeUpdate();
 
@@ -138,16 +147,11 @@ public class LancaEmpenho implements AcaoRotinaJava {
                     } else {
                         arg0.mostraErro("Usuário não tem permissão");
                     }
-
                 } else {
                     arg0.mostraErro("Quantidade a liberar não pode ser zero ou maior que a quantidade disponível.");
-
                 }
 
-
-
             } //Fim da iteração dos itens do empenho
-
 
 
         } // Fim da iteração das linhas

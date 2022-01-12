@@ -14,10 +14,15 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
 import br.com.sankhya.jape.EntityFacade;
+import br.com.sankhya.jape.core.JapeSession;
 import br.com.sankhya.jape.dao.JdbcWrapper;
 import br.com.sankhya.jape.event.PersistenceEvent;
 import br.com.sankhya.jape.vo.DynamicVO;
 import br.com.sankhya.jape.vo.EntityVO;
+import br.com.sankhya.jape.wrapper.JapeFactory;
+import br.com.sankhya.modelcore.MGEModelException;
+import br.com.sankhya.modelcore.dwfdata.vo.CabecalhoNotaVO;
+import br.com.sankhya.modelcore.util.DynamicEntityNames;
 import br.com.sankhya.modelcore.util.EntityFacadeFactory;
 import com.sankhya.util.TimeUtils;
 import consultas.consultasDados;
@@ -37,15 +42,7 @@ import save.salvarDados;
 
 public class CabecalhoNota {
 
-	public static void insereNota(PersistenceEvent arg0) throws Exception {
-
-		DynamicVO licitacaoVO = (DynamicVO) arg0.getVo();
-		BigDecimal codParc = licitacaoVO.asBigDecimalOrZero("CODPARC");
-		BigDecimal codLic =  licitacaoVO.asBigDecimalOrZero("CODLIC");
-		BigDecimal codEmp = licitacaoVO.asBigDecimalOrZero("CODEMP");
-		BigDecimal codNat = licitacaoVO.asBigDecimalOrZero("CODNAT");
-		BigDecimal codCencus = licitacaoVO.asBigDecimalOrZero("CODCENCUS");
-		BigDecimal codTipVenda = licitacaoVO.asBigDecimalOrZero("CODTIPVENDA");
+	public static void insereNota(DynamicVO licitacaoVO) throws Exception {
 
 		EntityFacade dwf = EntityFacadeFactory.getDWFFacade();
 		JdbcWrapper jdbcWrapper = dwf.getJdbcWrapper();
@@ -63,22 +60,20 @@ public class CabecalhoNota {
 
 			BigDecimal nuNota = salvarDados.salvaCabecalhoNota(
 					dwf,
-					codEmp,
-					codParc,
 					codTipOper,
-					codTipVenda,
-					codNat,
-					codCencus,
-					BigDecimal.ZERO,
-					TimeUtils.getNow(),
-					codLic);
+					licitacaoVO);
+
+
 
 			//String chave = login.loginNovo1(url,login11,senha);
 			//Retorno1 ret = incluirNota.IncluirNota(url, codParc+"", codEmp+"", DTNEG, codTipVenda+"", chave,codTipOper);
 			//nuNota = ret.getNunota();
 
+
+
 			licitacaoVO.setProperty("NUNOTA", nuNota);
 			dwf.saveEntity("AD_LICITACAO", (EntityVO) licitacaoVO);
+
 		}
 
 		jdbcWrapper.closeSession();
@@ -86,7 +81,7 @@ public class CabecalhoNota {
 	}
 
 
-	public static Retorno1 incluirNota(String url, String CODPARC, String CODEMP, String DTNEG, String CODTIPVENDA, String jsessionid, String codTipOper) throws  Exception{
+	public static Retorno incluirNota(String url, String CODPARC, String CODEMP, String DTNEG, String CODTIPVENDA, String jsessionid, String codTipOper) throws  Exception{
 		
 
 		OkHttpClient client = new OkHttpClient().newBuilder()
@@ -105,7 +100,7 @@ public class CabecalhoNota {
 				  .addHeader("Cookie", jsessionid)
 				  .addHeader("Content-Type", "application/xml")
 				  .build();
-				Retorno1 endereco = new Retorno1();
+				Retorno endereco = new Retorno();
 				try {
 					Response response = client.newCall(request).execute();
 					//System.out.println(response.body().string());
@@ -182,6 +177,35 @@ public class CabecalhoNota {
 
 		return result;
 	}
-	
-	
+
+	public static void atualizaParceiro(Object nuNota, Object codParc) throws Exception {
+		JapeSession.SessionHandle hnd = null;
+		try {
+			hnd = JapeSession.open();
+			JapeFactory.dao(DynamicEntityNames.CABECALHO_NOTA)
+					.prepareToUpdateByPK(nuNota)
+					.set("CODPARC", codParc)
+					.update();
+		} catch (Exception e) {
+			MGEModelException.throwMe(e);
+		} finally {
+			JapeSession.close(hnd);
+		}
+
+	}
+
+
+	public static void setPendente(BigDecimal nuNota, boolean b) throws Exception {
+
+		CabecalhoNotaVO cabVO = (CabecalhoNotaVO) EntityFacadeFactory.getDWFFacade().findEntityByPrimaryKeyAsVO(DynamicEntityNames.CABECALHO_NOTA, nuNota, CabecalhoNotaVO.class);
+
+		if (b) {
+			cabVO.setPENDENTE("S");
+		} else {
+			cabVO.setPENDENTE("N");
+		}
+
+		EntityFacadeFactory.getDWFFacade().saveEntity(DynamicEntityNames.CABECALHO_NOTA, cabVO);
+
+	}
 }

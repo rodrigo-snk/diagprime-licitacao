@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import br.com.sankhya.extensions.actionbutton.AcaoRotinaJava;
 import br.com.sankhya.extensions.actionbutton.ContextoAcao;
 import br.com.sankhya.extensions.actionbutton.Registro;
+import br.com.sankhya.jape.vo.DynamicVO;
 import br.com.sankhya.modelcore.auth.AuthenticationInfo;
 import br.com.sankhya.modelcore.comercial.BarramentoRegra;
 import br.com.sankhya.modelcore.comercial.ConfirmacaoNotaHelper;
@@ -14,6 +15,7 @@ import br.com.sankhya.modelcore.util.DynamicEntityNames;
 import br.com.sankhya.modelcore.util.EntityFacadeFactory;
 import br.com.sankhya.ws.ServiceContext;
 import processamento.Impostos;
+import processamento.Licitacao;
 
 public class ConfirmaNota implements AcaoRotinaJava {
 
@@ -32,7 +34,10 @@ public class ConfirmaNota implements AcaoRotinaJava {
 		for (Registro linha : linhas) {
 
 			nuNota = (BigDecimal) linha.getCampo("NUNOTA");
-			Impostos.recalculaImpostos((BigDecimal) linha.getCampo("CODLIC"));
+			BigDecimal codLic = (BigDecimal) linha.getCampo("CODLIC");
+			Impostos.recalculaImpostos(codLic);
+			DynamicVO licitacaoVO = (DynamicVO) EntityFacadeFactory.getDWFFacade().findEntityByPrimaryKeyAsVO("AD_LICITACAO", codLic);
+			Licitacao.atualizaImpostosFederais(licitacaoVO);
 
 			/*Collection<BigDecimal> numNota = new ArrayList<>();
 			Map<BigDecimal, BigDecimal> mapas = null;

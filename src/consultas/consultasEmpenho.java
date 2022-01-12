@@ -7,6 +7,7 @@ public class consultasEmpenho {
 		return "select \r\n"
 				+ "D.CODPROD,\r\n"
 				+ "D.CODVOL,\r\n"
+				+ "D.LOTEGRUPO,\r\n"
 				+ "DESCRPROD,A.NUMCONTRATO, \r\n"
 				+ "A.CODPARC, NOMEPARC,\r\n"
 				+ "C.RAZAOSOCIAL AS EMPRESA,\r\n"

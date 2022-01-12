@@ -14,6 +14,7 @@ import br.com.sankhya.modelcore.util.EntityFacadeFactory;
 
 import java.math.BigDecimal;
 
+// Está sendo utilizado o evento em script de banco (STP_EVT_CAB_QTDMISTURA)
 public class AtualizaQtdMistura implements EventoProgramavelJava {
     @Override
     public void beforeInsert(PersistenceEvent persistenceEvent) throws Exception {

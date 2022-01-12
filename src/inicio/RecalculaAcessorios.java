@@ -9,6 +9,7 @@ import br.com.sankhya.extensions.actionbutton.ContextoAcao;
 import br.com.sankhya.extensions.actionbutton.Registro;
 import br.com.sankhya.jape.EntityFacade;
 import br.com.sankhya.jape.dao.JdbcWrapper;
+import br.com.sankhya.jape.vo.DynamicVO;
 import br.com.sankhya.modelcore.comercial.impostos.ImpostosHelpper;
 import br.com.sankhya.modelcore.util.EntityFacadeFactory;
 import save.salvarDados;
@@ -24,18 +25,6 @@ public class RecalculaAcessorios implements AcaoRotinaJava {
 		Registro[] registros = arg0.getLinhas();
 		//int usuario = Integer.parseInt(""+arg0.getUsuarioLogado());
 		BigDecimal codLic = (BigDecimal) registros[0].getCampo("CODLIC");
-
-		String sql = "select * from ad_licitacao  where codlic=" + codLic;
-		PreparedStatement pstmt = jdbc.getPreparedStatement(sql);
-		ResultSet rs = pstmt.executeQuery();
-
-		while (rs.next()) {
-			BigDecimal nuNota = rs.getBigDecimal("NUNOTA");
-			ImpostosHelpper impostos = new ImpostosHelpper();
-			impostos.setForcarRecalculo(true);
-			impostos.calcularImpostos(nuNota);
-		}
-
 
 		salvarDados.insereAcessorios(codLic, jdbc);
 		jdbc.closeSession();

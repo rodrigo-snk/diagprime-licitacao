@@ -3,10 +3,10 @@ package util;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import processamento.Retorno1;
+import processamento.Retorno;
 import processamento.CabecalhoNota;
 
-public class teste {
+public class DebugTest {
 
 	public static void main(String[] args) throws Exception {
 		// TODO Auto-generated method stub
@@ -19,7 +19,7 @@ public class teste {
 		SimpleDateFormat formatador = new SimpleDateFormat("dd/MM/yyyy");
 		String DTNEG = formatador.format(data1);
 		
-		Retorno1 ret = CabecalhoNota.incluirNota("http://200.251.88.55:9044", 205+"", "1", DTNEG, 27+"", chave,"1006");
+		Retorno ret = CabecalhoNota.incluirNota("http://200.251.88.55:9044", 205+"", "1", DTNEG, 27+"", chave,"1006");
 		try {
 		//	String chave = si.doLogin();
 			System.out.println(chave);

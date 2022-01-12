@@ -1,18 +1,21 @@
 package processamento;
 
-import br.com.sankhya.jape.event.PersistenceEvent;
+import br.com.sankhya.jape.dao.JdbcWrapper;
+import br.com.sankhya.jape.util.FinderWrapper;
 import br.com.sankhya.jape.vo.DynamicVO;
 import br.com.sankhya.jape.vo.EntityVO;
+import br.com.sankhya.modelcore.util.DynamicEntityNames;
 import br.com.sankhya.modelcore.util.EntityFacadeFactory;
 
 import java.math.BigDecimal;
 import java.math.MathContext;
+import java.sql.PreparedStatement;
+import java.util.Optional;
 
 public class Licitacao {
 
-    public static void atualizaImpostosFederais(PersistenceEvent arg0) throws Exception {
+    public static void atualizaImpostosFederais(DynamicVO licitacaoVO) throws Exception {
 
-        DynamicVO licitacaoVO = (DynamicVO) arg0.getVo();
         BigDecimal percentualCSLLRetido = licitacaoVO.asBigDecimalOrZero("PERCENTUAL_CSLL");
         BigDecimal percentualCSLLDevido = licitacaoVO.asBigDecimalOrZero("PERCENTUAL_CSLLDEVIDO");
         BigDecimal percentualIRRetido = licitacaoVO.asBigDecimalOrZero("PERCENTUAL_IR");
@@ -34,4 +37,18 @@ public class Licitacao {
 
         EntityFacadeFactory.getDWFFacade().saveEntity("AD_LICITACAO", (EntityVO) licitacaoVO);
     }
+
+    public static void excluiReferencias(JdbcWrapper jdbc, BigDecimal nuNota) throws Exception {
+        PreparedStatement deleteReferencia = jdbc.getPreparedStatement("DELETE FROM TGFVAR WHERE NUNOTAORIG = "+ nuNota);
+        deleteReferencia.executeUpdate();
+    }
+
+    public static BigDecimal getContatoPregoeiro(BigDecimal codParc) throws Exception {
+     Optional<DynamicVO> contatoVO = EntityFacadeFactory.getDWFFacade().findByDynamicFinderAsVO(new FinderWrapper(DynamicEntityNames.CONTATO, "this.CODPARC = ? AND this.NOMECONTATO LIKE 'SR(A). PREGOEIRO(A)%'", codParc)).stream().findFirst();
+            if (contatoVO.isPresent()) {
+                return contatoVO.get().asBigDecimalOrZero("CODCONTATO");
+            }
+        return BigDecimal.ZERO;
+    }
 }
+

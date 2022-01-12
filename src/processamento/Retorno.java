@@ -1,7 +1,7 @@
 package processamento;
 
 
-public class Retorno1{
+public class Retorno {
 
 	 String statusMessage;
 	 Boolean retorno;

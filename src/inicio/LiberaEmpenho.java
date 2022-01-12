@@ -10,11 +10,11 @@ public class LiberaEmpenho implements AcaoRotinaJava {
 
 	@Override
 	public void doAction(ContextoAcao arg0) throws Exception {
-		BigDecimal contrato = (BigDecimal) arg0.getParam("NUMCONTRATO");
+		BigDecimal numContrato = (BigDecimal) arg0.getParam("NUMCONTRATO");
 		String empenho = (String) arg0.getParam("EMPENHO");
-		Empenho.liberarEmpenho(arg0, contrato, empenho);
+		//Empenho.liberarEmpenho(numContrato, empenho);
 		
-		arg0.setMensagemRetorno("Empenho preparado agora vamos liberar!");
+		arg0.setMensagemRetorno("Ação descontinuada.");
 	}
 
 }

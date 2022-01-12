@@ -46,6 +46,7 @@ public class AtualizaAcessorios implements EventoProgramavelJava {
         BigDecimal vlrUnit = acessorioVO.asBigDecimalOrZero("VLRUNIT");
         BigDecimal vlrTot = vlrUnit.multiply(qtdNeg);
         String codVol = acessorioVO.asString("CODVOL");
+        String loteGrupo = acessorioVO.asString("LOTEGRUPO");
         BigDecimal markupFator = acessorioVO.asBigDecimalOrZero("MARKUPFATOR");
 
         if (markupFator.compareTo(BigDecimal.ZERO) <= 0) {
@@ -59,7 +60,7 @@ public class AtualizaAcessorios implements EventoProgramavelJava {
         BigDecimal nuNota = licitacaoVO.asBigDecimalOrZero("NUNOTA");
         BigDecimal codEmp = licitacaoVO.asBigDecimalOrZero("CODEMP");
 
-        Acessorios.insereAcessorios(nuNota,codProd,qtdNeg, codVol, vlrUnit, vlrTot, codEmp, codLicCom,codLic);
+        Acessorios.insereAcessorios(nuNota,codProd,qtdNeg, codVol, vlrUnit, vlrTot, codEmp, codLicCom,codLic, loteGrupo);
 
     }
 
