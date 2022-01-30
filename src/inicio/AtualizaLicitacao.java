@@ -1,13 +1,14 @@
 package inicio;
 import br.com.sankhya.extensions.eventoprogramavel.EventoProgramavelJava;
+import br.com.sankhya.jape.EntityFacade;
 import br.com.sankhya.jape.event.PersistenceEvent;
 import br.com.sankhya.jape.event.TransactionContext;
+import br.com.sankhya.jape.util.FinderWrapper;
 import br.com.sankhya.jape.vo.DynamicVO;
-import br.com.sankhya.modelcore.MGEModelException;
-import br.com.sankhya.modelcore.comercial.ComercialUtils;
-import br.com.sankhya.modelcore.helper.CalculoPrecosCustosHelper;
+import br.com.sankhya.modelcore.util.DynamicEntityNames;
+import br.com.sankhya.modelcore.util.EntityFacadeFactory;
 import com.sankhya.util.BigDecimalUtil;
-import processamento.*;
+import helpper.*;
 
 import java.math.BigDecimal;
 
@@ -15,8 +16,12 @@ public class AtualizaLicitacao implements EventoProgramavelJava {
 
 	@Override
 	public void afterDelete(PersistenceEvent arg0) throws Exception {
-		// TODO Auto-generated method stub
 
+		EntityFacade dwf = EntityFacadeFactory.getDWFFacade();
+
+		if (dwf.findEntityByPrimaryKey(DynamicEntityNames.CABECALHO_NOTA, arg0.getEntityProperty("NUNOTA")) != null){
+			EntityFacadeFactory.getDWFFacade().removeEntity(DynamicEntityNames.CABECALHO_NOTA, new Object[]{arg0.getEntityProperty("NUNOTA")});
+		}
 	}
 
 	@Override
@@ -33,14 +38,20 @@ public class AtualizaLicitacao implements EventoProgramavelJava {
 
 	@Override
 	public void afterUpdate(PersistenceEvent arg0) throws Exception {
+		DynamicVO licitacaoVO = (DynamicVO) arg0.getVo();
 		boolean isModifyingParceiro = arg0.getModifingFields().isModifing("CODPARC");
+		final boolean isModifingAny = !arg0.getModifingFields().isEmpty();
+		EntityFacade dwf = EntityFacadeFactory.getDWFFacade();
+
 		if (isModifyingParceiro) {
 			CabecalhoNota.atualizaParceiro(arg0.getEntityProperty("NUNOTA"), arg0.getEntityProperty("CODPARC"));
 			Impostos.recalculaImpostos((BigDecimal) arg0.getEntityProperty("CODLIC"));
 		}
-		DynamicVO licitacaoVO = (DynamicVO) arg0.getVo();
-		Licitacao.atualizaImpostosFederais(licitacaoVO);
+		if (isModifingAny) {
+			CabecalhoNota.atualizaCabecalhoNota(dwf, licitacaoVO);
+		}
 
+		Licitacao.atualizaImpostosFederais(licitacaoVO);
 		CabecalhoNota.setPendente(licitacaoVO.asBigDecimalOrZero("NUNOTA"), true);
 	}
 
@@ -53,8 +64,9 @@ public class AtualizaLicitacao implements EventoProgramavelJava {
 
 	@Override
 	public void beforeDelete(PersistenceEvent arg0) throws Exception {
-		// TODO Auto-generated method stub
 
+		EntityFacadeFactory.getDWFFacade().removeByCriteria(new FinderWrapper("AD_ITENSLICITACAO", "this.CODLIC = ?", arg0.getEntityProperty("CODLIC")));
+		EntityFacadeFactory.getDWFFacade().removeByCriteria(new FinderWrapper("AD_LICITACAOCOMPONENTES", "this.CODLIC = ?", arg0.getEntityProperty("CODLIC")));
 	}
 
 	@Override

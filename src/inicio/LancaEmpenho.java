@@ -11,8 +11,7 @@ import br.com.sankhya.modelcore.auth.AuthenticationInfo;
 import br.com.sankhya.modelcore.util.DynamicEntityNames;
 import br.com.sankhya.modelcore.util.EntityFacadeFactory;
 import consultas.consultasDados;
-import processamento.Empenho;
-import save.salvarDadosEmpenho;
+import helpper.Empenho;
 
 import java.math.BigDecimal;
 import java.sql.PreparedStatement;

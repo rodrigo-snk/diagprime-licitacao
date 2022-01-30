@@ -5,7 +5,7 @@ import java.math.BigDecimal;
 import br.com.sankhya.extensions.actionbutton.AcaoRotinaJava;
 import br.com.sankhya.extensions.actionbutton.ContextoAcao;
 import br.com.sankhya.extensions.actionbutton.Registro;
-import processamento.ItensLicitacao;
+import helpper.ItensLicitacao;
 
 public class RecalculaCustoItem implements AcaoRotinaJava {
 

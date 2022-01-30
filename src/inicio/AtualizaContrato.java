@@ -12,7 +12,7 @@ import br.com.sankhya.jape.event.TransactionContext;
 import br.com.sankhya.jape.vo.DynamicVO;
 import br.com.sankhya.modelcore.util.EntityFacadeFactory;
 import consultas.contratosCons;
-import processamento.Contrato;
+import helpper.Contrato;
 
 public class AtualizaContrato implements EventoProgramavelJava {
 

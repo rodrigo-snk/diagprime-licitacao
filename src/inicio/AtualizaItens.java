@@ -13,10 +13,9 @@ import br.com.sankhya.jape.vo.DynamicVO;
 import br.com.sankhya.modelcore.util.DynamicEntityNames;
 import br.com.sankhya.modelcore.util.EntityFacadeFactory;
 import consultas.consultasDados;
-import processamento.*;
-import save.salvarDados;
+import helpper.*;
 
-import static processamento.Licitacao.excluiReferencias;
+import static helpper.Licitacao.excluiReferencias;
 
 public class AtualizaItens implements EventoProgramavelJava {
 
@@ -28,7 +27,7 @@ public class AtualizaItens implements EventoProgramavelJava {
 
 		ItensLicitacao.atualizaTotal(arg0);
 
-		salvarDados.insereAcessorios((BigDecimal) arg0.getEntityProperty("CODLIC"), jdbc);
+		ItemNota.insereAcessorios((BigDecimal) arg0.getEntityProperty("CODLIC"), jdbc);
 
 		DynamicVO licitacaoVO = (DynamicVO) dwf.findEntityByPrimaryKeyAsVO("AD_LICITACAO", arg0.getEntityProperty("CODLIC"));
 		Licitacao.atualizaImpostosFederais(licitacaoVO);
@@ -77,7 +76,7 @@ public class AtualizaItens implements EventoProgramavelJava {
 		jdbc.openSession();
 
 		if (!dwf.findByDynamicFinderAsVO(new FinderWrapper(DynamicEntityNames.ITEM_COMPOSICAO_PRODUTO, "this.CODPROD = ?", arg0.getEntityProperty("CODPROD"))).isEmpty()) {
-			salvarDados.insereAcessorios((BigDecimal) arg0.getEntityProperty("CODLIC"), jdbc);
+			ItemNota.insereAcessorios((BigDecimal) arg0.getEntityProperty("CODLIC"), jdbc);
 		}
 
 		Impostos.recalculaImpostos((BigDecimal) arg0.getEntityProperty("CODLIC"));

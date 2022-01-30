@@ -1,4 +1,4 @@
-package processamento;
+package helpper;
 
 import java.math.BigDecimal;
 import java.sql.PreparedStatement;
@@ -12,13 +12,11 @@ import br.com.sankhya.jape.vo.EntityVO;
 import br.com.sankhya.modelcore.comercial.ComercialUtils;
 import br.com.sankhya.modelcore.util.EntityFacadeFactory;
 import consultas.consultasEmpenho;
-import save.salvarDadosEmpenho;
 
 public class Empenho {
 
 	public static BigDecimal salvaCabecalhoNota(
 			EntityFacade dwf,
-			ContextoAcao arg0,
 			BigDecimal codEmp,
 			BigDecimal codParc,
 			BigDecimal codTipOper,

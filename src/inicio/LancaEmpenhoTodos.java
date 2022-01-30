@@ -11,7 +11,7 @@ import br.com.sankhya.jape.EntityFacade;
 import br.com.sankhya.jape.dao.JdbcWrapper;
 import br.com.sankhya.modelcore.util.EntityFacadeFactory;
 import consultas.consultasDados;
-import processamento.Empenho;
+import helpper.Empenho;
 
 public class LancaEmpenhoTodos implements AcaoRotinaJava {
 

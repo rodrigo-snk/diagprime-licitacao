@@ -5,9 +5,9 @@ import br.com.sankhya.jape.event.PersistenceEvent;
 import br.com.sankhya.jape.event.TransactionContext;
 import br.com.sankhya.jape.vo.DynamicVO;
 import br.com.sankhya.modelcore.util.EntityFacadeFactory;
-import processamento.Acessorios;
-import processamento.Impostos;
-import processamento.ItensLicitacao;
+import helpper.Acessorios;
+import helpper.Impostos;
+import helpper.ItensLicitacao;
 
 import java.math.BigDecimal;
 
@@ -56,7 +56,7 @@ public class AtualizaAcessorios implements EventoProgramavelJava {
             qtdNeg = BigDecimal.ONE;
         }
 
-        DynamicVO licitacaoVO = (DynamicVO) EntityFacadeFactory.getDWFFacade().findEntityByPrimaryKey("AD_LICITACAO", codLic);
+        DynamicVO licitacaoVO = (DynamicVO) EntityFacadeFactory.getDWFFacade().findEntityByPrimaryKeyAsVO("AD_LICITACAO", codLic);
         BigDecimal nuNota = licitacaoVO.asBigDecimalOrZero("NUNOTA");
         BigDecimal codEmp = licitacaoVO.asBigDecimalOrZero("CODEMP");
 

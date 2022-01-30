@@ -1,4 +1,4 @@
-package processamento;
+package helpper;
 
 import br.com.sankhya.jape.EntityFacade;
 import br.com.sankhya.jape.PersistenceException;
@@ -13,10 +13,8 @@ import br.com.sankhya.modelcore.comercial.ComercialUtils;
 import br.com.sankhya.modelcore.comercial.impostos.ImpostosHelpper;
 import br.com.sankhya.modelcore.util.DynamicEntityNames;
 import br.com.sankhya.modelcore.util.EntityFacadeFactory;
-import br.com.sankhya.modelcore.util.ProdutoUtils;
 import com.sankhya.util.StringUtils;
 import consultas.consultasDados;
-import save.salvarDados;
 
 import java.math.BigDecimal;
 import java.math.MathContext;
@@ -371,7 +369,7 @@ public class ItensLicitacao {
             impostos.calcularImpostos(nuNota);
         }
 
-        salvarDados.insereAcessorios(codLic, jdbcWrapper);
+        ItemNota.insereAcessorios(codLic, jdbcWrapper);
         jdbcWrapper.closeSession();
     }
 
@@ -471,16 +469,15 @@ public class ItensLicitacao {
         ItensLicitacao.atualizaItemLic(codLic, codIteLic, custo.multiply(markupFator), vlrTot, markupFator, custo);
         //pstmt.executeUpdate("UPDATE AD_ITENSLICITACAO SET CUSTO="+custo+", VLRUNIT = "+custo.multiply(markupFator)+", VLRTOTAL = "+vlrTot.multiply(qtdNeg.multiply(volumeAlternativo.getQtdVolAlternativo()))+" where CODITELIC="+codIteLic+" and CODLIC="+codLic);
 
-        salvarDados.salvaItemNota(dwf,nuNota,codProd,qtdNeg,codVol,vlrUnit,vlrTot,codEmp,codIteLic,codLic, loteGrupo);
+        ItemNota.salvaItemNota(dwf,nuNota,codProd,qtdNeg,codVol,vlrUnit,vlrTot,codEmp,codIteLic,codLic, loteGrupo);
 
         ImpostosHelpper impostos = new ImpostosHelpper();
         impostos.setForcarRecalculo(true);
         impostos.calcularImpostos(nuNota);
 
 
-
         if (!dwf.findByDynamicFinderAsVO(new FinderWrapper(DynamicEntityNames.ITEM_COMPOSICAO_PRODUTO, "this.CODPROD = ?", codProd)).isEmpty()) {
-             salvarDados.insereAcessorios(codLic, jdbcWrapper);
+             ItemNota.insereAcessorios(codLic, jdbcWrapper);
          }
 
 

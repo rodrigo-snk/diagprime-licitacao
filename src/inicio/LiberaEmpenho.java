@@ -4,7 +4,6 @@ import java.math.BigDecimal;
 
 import br.com.sankhya.extensions.actionbutton.AcaoRotinaJava;
 import br.com.sankhya.extensions.actionbutton.ContextoAcao;
-import processamento.Empenho;
 
 public class LiberaEmpenho implements AcaoRotinaJava {
 

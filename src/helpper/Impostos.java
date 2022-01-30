@@ -1,4 +1,4 @@
-package processamento;
+package helpper;
 
 import br.com.sankhya.jape.vo.DynamicVO;
 import br.com.sankhya.modelcore.comercial.impostos.ImpostosHelpper;

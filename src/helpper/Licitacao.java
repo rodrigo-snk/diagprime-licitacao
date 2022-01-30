@@ -1,4 +1,4 @@
-package processamento;
+package helpper;
 
 import br.com.sankhya.jape.dao.JdbcWrapper;
 import br.com.sankhya.jape.util.FinderWrapper;

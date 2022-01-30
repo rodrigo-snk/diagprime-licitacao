@@ -14,8 +14,8 @@ import br.com.sankhya.modelcore.dwfdata.vo.CabecalhoNotaVO;
 import br.com.sankhya.modelcore.util.DynamicEntityNames;
 import br.com.sankhya.modelcore.util.EntityFacadeFactory;
 import br.com.sankhya.ws.ServiceContext;
-import processamento.Impostos;
-import processamento.Licitacao;
+import helpper.Impostos;
+import helpper.Licitacao;
 
 public class ConfirmaNota implements AcaoRotinaJava {
 

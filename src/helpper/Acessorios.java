@@ -1,25 +1,18 @@
-package processamento;
+package helpper;
 
 import br.com.sankhya.jape.EntityFacade;
 import br.com.sankhya.jape.dao.JdbcWrapper;
 import br.com.sankhya.jape.event.PersistenceEvent;
-import br.com.sankhya.jape.util.DateTimeUtil;
 import br.com.sankhya.jape.vo.DynamicVO;
-import br.com.sankhya.jape.vo.EntityVO;
 import br.com.sankhya.mgecomercial.model.facades.helpper.ItemNotaHelpper;
-import br.com.sankhya.modelcore.MGEModelException;
-import br.com.sankhya.modelcore.comercial.impostos.AliquotaImpostoHelper;
-import br.com.sankhya.modelcore.comercial.impostos.ImpostosHelpper;
 import br.com.sankhya.modelcore.dwfdata.vo.CabecalhoNotaVO;
 import br.com.sankhya.modelcore.dwfdata.vo.ItemNotaVO;
 import br.com.sankhya.modelcore.util.EntityFacadeFactory;
 
-import javax.mail.FetchProfile;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 

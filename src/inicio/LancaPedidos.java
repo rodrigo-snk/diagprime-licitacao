@@ -13,7 +13,7 @@ import br.com.sankhya.modelcore.comercial.impostos.ImpostosHelpper;
 import br.com.sankhya.modelcore.comercial.util.TipoOperacaoUtils;
 import br.com.sankhya.modelcore.util.EntityFacadeFactory;
 import consultas.consultasDados;
-import processamento.Empenho;
+import helpper.Empenho;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.sql.PreparedStatement;
@@ -71,7 +71,6 @@ public class LancaPedidos implements AcaoRotinaJava {
 
                                 nuNota = Empenho.salvaCabecalhoNota(
                                         dwf,
-                                        arg0,
                                         codEmp,
                                         codParc,
                                         new BigDecimal(codTipOper),
