@@ -39,7 +39,7 @@ public class AtualizaLicitacao implements EventoProgramavelJava {
 	@Override
 	public void afterUpdate(PersistenceEvent arg0) throws Exception {
 		DynamicVO licitacaoVO = (DynamicVO) arg0.getVo();
-		boolean isModifyingParceiro = arg0.getModifingFields().isModifing("CODPARC");
+		final boolean isModifyingParceiro = arg0.getModifingFields().isModifing("CODPARC");
 		final boolean isModifingAny = !arg0.getModifingFields().isEmpty();
 		EntityFacade dwf = EntityFacadeFactory.getDWFFacade();
 

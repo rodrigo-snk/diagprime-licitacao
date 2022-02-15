@@ -389,7 +389,6 @@ public class ItensLicitacao {
         BigDecimal item = itemVO.asBigDecimalOrZero("ITEM");
         BigDecimal markupFator = itemVO.asBigDecimalOrZero("MARKUPFATOR");
         String codVol = itemVO.asString("UNID");
-        String loteGrupo = StringUtils.getNullAsEmpty(itemVO.asString("LOTEGRUPO"));
 
         BigDecimal replicando = itemVO.asBigDecimalOrZero("REPLICANDO");
 
@@ -469,7 +468,7 @@ public class ItensLicitacao {
         ItensLicitacao.atualizaItemLic(codLic, codIteLic, custo.multiply(markupFator), vlrTot, markupFator, custo);
         //pstmt.executeUpdate("UPDATE AD_ITENSLICITACAO SET CUSTO="+custo+", VLRUNIT = "+custo.multiply(markupFator)+", VLRTOTAL = "+vlrTot.multiply(qtdNeg.multiply(volumeAlternativo.getQtdVolAlternativo()))+" where CODITELIC="+codIteLic+" and CODLIC="+codLic);
 
-        ItemNota.salvaItemNota(dwf,nuNota,codProd,qtdNeg,codVol,vlrUnit,vlrTot,codEmp,codIteLic,codLic, loteGrupo);
+        ItemNota.salvaItemNota(dwf,nuNota,codProd,qtdNeg,codVol,vlrUnit,vlrTot,codEmp,codIteLic,codLic, licitacaoVO.asString("LOTEGRUPO"), licitacaoVO.asString("OBSERVACAOLOTE"));
 
         ImpostosHelpper impostos = new ImpostosHelpper();
         impostos.setForcarRecalculo(true);

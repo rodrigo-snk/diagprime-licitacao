@@ -31,6 +31,7 @@ public class Contrato {
 		BigDecimal numContrato1 = cabVO.asBigDecimalOrZero("NUMCONTRATO");
 		BigDecimal codEmp = cabVO.asBigDecimalOrZero("CODEMP");
 		BigDecimal codNat = cabVO.asBigDecimalOrZero("CODNAT");
+		BigDecimal codCenCus = cabVO.asBigDecimalOrZero("CODCENCUS");
 		BigDecimal codParc = cabVO.asBigDecimalOrZero("CODPARC");
 		BigDecimal codContato = cabVO.asBigDecimalOrZero("CODCONTATO");
 		BigDecimal codTipVenda = cabVO.asBigDecimalOrZero("CODTIPVENDA");
@@ -56,6 +57,7 @@ public class Contrato {
 						codContato,
 						codTipVenda,
 						codNat,
+						codCenCus,
 						AD_CODTIPOPERDESTINO,
 						nuNota);
 
@@ -149,6 +151,7 @@ public class Contrato {
 			BigDecimal codContato,
 			BigDecimal codTipVenda,
 			BigDecimal codNat,
+			BigDecimal codCenCus,
 			BigDecimal codTipOper,
 			BigDecimal nuNota) throws Exception {
 
@@ -175,6 +178,7 @@ public class Contrato {
 		contratoVO.setProperty("CODCONTATO", codContato);
 		contratoVO.setProperty("CODUSU", codUsuLogado);
 		contratoVO.setProperty("CODNAT", codNat);
+		contratoVO.setProperty("CODCENCUS", codCenCus);
 		contratoVO.setProperty("CODTIPVENDA", codTipVenda);
 		contratoVO.setProperty("AD_CODTIPOPER", codTipOper);
 		contratoVO.setProperty("ATIVO", "S");

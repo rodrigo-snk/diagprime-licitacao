@@ -69,11 +69,10 @@ public class CentralNotasUtils {
         for (String campo : map.keySet()) {
             destinoVO.setProperty(campo, map.get(campo));
         }
-        
+
         PersistentLocalEntity createEntity = dwfFacade.createEntity(entidade, (EntityVO) destinoVO);
-        
         DynamicVO save = (DynamicVO) createEntity.getValueObject();
-                
+
         return buildPk(save, rootDAO);
     }
 

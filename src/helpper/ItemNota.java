@@ -3,6 +3,7 @@ package helpper;
 import br.com.sankhya.jape.EntityFacade;
 import br.com.sankhya.jape.core.JapeSession;
 import br.com.sankhya.jape.dao.JdbcWrapper;
+import br.com.sankhya.jape.util.FinderWrapper;
 import br.com.sankhya.jape.vo.DynamicVO;
 import br.com.sankhya.jape.wrapper.JapeFactory;
 import br.com.sankhya.jape.wrapper.JapeWrapper;
@@ -49,7 +50,8 @@ public class ItemNota {
             BigDecimal codEmp,
             BigDecimal codIteLic,
             BigDecimal codLic,
-            String loteGrupo) throws Exception {
+            String loteGrupo,
+            String observacaoLote) throws Exception {
 
         ItemNotaVO itemVO = (ItemNotaVO) dwfFacade.getDefaultValueObjectInstance("ItemNota", ItemNotaVO.class);
         CabecalhoNotaVO cabVO = (CabecalhoNotaVO) dwfFacade.findEntityByPrimaryKeyAsVO("CabecalhoNota",nuNota,CabecalhoNotaVO.class);
@@ -64,30 +66,16 @@ public class ItemNota {
         itemVO.setUSOPROD("R");
         itemVO.setRESERVA("N");
         itemVO.setATUALESTOQUE(BigDecimal.ZERO);
-        itemVO.setProperty("AD_CODITELIC", codIteLic);
-        itemVO.setProperty("AD_CODLIC", codLic);
-        itemVO.setProperty("AD_LOTEGRUPO",loteGrupo);
-
-        //if(tipo.equalsIgnoreCase("F")) {
-        //itemVO.setProperty("STATUSNOTA", "L");
-        //}
-        //itemVO.setProperty("CODLOCALORIG", codLocal);
+        if (itemVO.containsProperty(("AD_CODITELIC"))) itemVO.setProperty("AD_CODITELIC", codIteLic);
+        if (itemVO.containsProperty(("AD_CODLIC"))) itemVO.setProperty("AD_CODLIC", codLic);
+        if (itemVO.containsProperty(("AD_ACESSORIOS"))) itemVO.setProperty("AD_ACESSORIOS","N");
+        if (itemVO.containsProperty(("AD_LOTEGRUPO"))) itemVO.setProperty("AD_LOTEGRUPO",loteGrupo);
+        if (itemVO.containsProperty(("AD_OBSLOTE"))) itemVO.setProperty("AD_OBSLOTE",observacaoLote);
 
         Collection<ItemNotaVO> itens = new ArrayList<>();
         itens.add(itemVO);
 
-        //dwfFacade.createEntity("ItemNota", (EntityVO) itemVO);
         ItemNotaHelpper.saveItensNota(itens, cabVO);
-
-		/*EntityFacade dwf = EntityFacadeFactory.getDWFFacade();
-		JdbcWrapper jdbc = dwf.getJdbcWrapper();
-		jdbc.openSession();
-
-		String update1 = "UPDATE TGFITE SET QTDNEG="+qtdNeg+",VLRTOT="+vlrTot+",VLRUNIT="+vlrUnit+" "
-				+ "where AD_CODITELIC="+codIteLic+" and AD_CODLIC="+codLic;
-		PreparedStatement  updateValidand1 = jdbc.getPreparedStatement(update1);
-		updateValidand1.executeUpdate();
-		jdbc.closeSession();*/
 
     }
 
@@ -114,17 +102,21 @@ public class ItemNota {
                 "JOIN AD_ITENSLICITACAO ITE ON ITE.CODPROD = ICP.CODPROD\n" +
                 "WHERE ITE.CODLIC = "+codLic;
 
+        EntityFacade dwf = EntityFacadeFactory.getDWFFacade();
+
         // Execute DELETE on AD_LICITACAOCOMPONENTES
-        PreparedStatement deleteComponentes = jdbc.getPreparedStatement("DELETE FROM AD_LICITACAOCOMPONENTES WHERE CODLIC = "+codLic);
-        deleteComponentes.executeUpdate();
+        dwf.removeByCriteria(new FinderWrapper("AD_LICITACAOCOMPONENTES", "this.CODLIC = ?", codLic));
+        //PreparedStatement deleteComponentes = jdbc.getPreparedStatement("DELETE FROM AD_LICITACAOCOMPONENTES WHERE CODLIC = "+codLic);
+        //deleteComponentes.executeUpdate();
 
         // Deleta as referencias da pré-proposta
         DynamicVO licitacaoVO = (DynamicVO) EntityFacadeFactory.getDWFFacade().findEntityByPrimaryKeyAsVO("AD_LICITACAO", codLic);
         excluiReferencias(jdbc, licitacaoVO.asBigDecimalOrZero("NUNOTA"));
 
         // Execute DELETE on TGFITE
-        PreparedStatement deleteItemComponentes = jdbc.getPreparedStatement("DELETE FROM TGFITE WHERE AD_CODLIC = "+codLic+" AND AD_CODLICCOM IS NOT NULL");
-        deleteItemComponentes.executeUpdate();
+        dwf.removeByCriteria(new FinderWrapper(DynamicEntityNames.ITEM_NOTA, "this.AD_CODLIC = ? AND AD_CODLICCOM IS NOT NULL", codLic));
+        //PreparedStatement deleteItemComponentes = jdbc.getPreparedStatement("DELETE FROM TGFITE WHERE AD_CODLIC = "+codLic+" AND AD_CODLICCOM IS NOT NULL");
+        //deleteItemComponentes.executeUpdate();
 
         PreparedStatement selectComponentes = jdbc.getPreparedStatement(selectSQL);
         ResultSet rs = selectComponentes.executeQuery();
@@ -140,9 +132,7 @@ public class ItemNota {
         ResultSet componente = consultaLic.executeQuery();
         BigDecimal nuNota = null;
 
-        //if(true) throw new MGEModelException("CHEGOU" +codLic);
         while (componente.next()) {
-            //if(true) throw new MGEModelException("CHEGOU2" +codLic);
 
             BigDecimal codLicCom = componente.getBigDecimal("CODLICCOM");
             nuNota = componente.getBigDecimal("NUNOTA");
@@ -156,11 +146,8 @@ public class ItemNota {
             BigDecimal markupFator = componente.getBigDecimal("MARKUPFATOR");
             if(!(markupFator.doubleValue()>0)) markupFator = BigDecimal.ONE;
             if(!(qtdNeg.doubleValue()>0)) qtdNeg = BigDecimal.ONE;
-            //if(true) throw new MGEModelException("CHEGOU2");
 
-            Acessorios.insereAcessorios(nuNota,codProd,qtdNeg,codVol,vlrUnit,vlrTot,codEmp,codLicCom,codLic,loteGrupo);
-
-            //if(true) throw new MGEModelException("CHEGOU3");
+            Acessorios.insereAcessorios(nuNota,codProd,qtdNeg,codVol,vlrUnit,vlrTot,codEmp,codLicCom,codLic,loteGrupo, licitacaoVO.asString("OBSERVACAOLOTE"));
 
         }
 

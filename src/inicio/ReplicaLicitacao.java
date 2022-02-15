@@ -55,7 +55,7 @@ public class ReplicaLicitacao implements AcaoRotinaJava {
 		DynamicVO financeiroVO = financeiroDAO.findOne("CODLIC = ?", codLic);
 		Map<String, Object> fieldsFin = new HashMap<>();
 		fieldsFin.put("NUNOTA", BigDecimal.ZERO);
-		
+
 		Map<String, Object> PK = util.CentralNotasUtils.duplicaRegistro(financeiroVO, "AD_LICITACAO", fieldsFin);
 		BigDecimal codLicNovo = (BigDecimal) PK.get("CODLIC");
 
@@ -66,17 +66,16 @@ public class ReplicaLicitacao implements AcaoRotinaJava {
 		ResultSet rs = pstmt.executeQuery();
 
 		while(rs.next()){
-			
-		BigDecimal codIteLic = rs.getBigDecimal("CODITELIC");
-		DynamicVO licitacaoVO = licitacaoDAO.findOne("CODLIC = ? AND CODITELIC="+codIteLic, codLic);
-		Map<String, Object> licitacaoFin = new HashMap<>();
-		licitacaoFin.put("CODLIC", codLicNovo);
-		licitacaoFin.put("REPLICANDO", new BigDecimal(1));
-		licitacaoFin.put("CODITELIC_ANTERIOR", codIteLic);
-		licitacaoFin.put("CODLIC_ANTERIOR", codLic);
-		
-		Map<String, Object> PK1 = util.CentralNotasUtils.duplicaRegistro(licitacaoVO, "AD_ITENSLICITACAO", licitacaoFin);
-		//BigDecimal codLicNovo = (BigDecimal) PK1.get("CODLIC");
+			BigDecimal codIteLic = rs.getBigDecimal("CODITELIC");
+			DynamicVO licitacaoVO = licitacaoDAO.findOne("CODLIC = ? AND CODITELIC="+codIteLic, codLic);
+			Map<String, Object> licitacaoFin = new HashMap<>();
+			licitacaoFin.put("CODLIC", codLicNovo);
+			licitacaoFin.put("REPLICANDO", new BigDecimal(1));
+			licitacaoFin.put("CODITELIC_ANTERIOR", codIteLic);
+			licitacaoFin.put("CODLIC_ANTERIOR", codLic);
+
+			Map<String, Object> PK1 = util.CentralNotasUtils.duplicaRegistro(licitacaoVO, "AD_ITENSLICITACAO", licitacaoFin);
+			//BigDecimal codLicNovo = (BigDecimal) PK1.get("CODLIC");
 		}
 		arg0.setMensagemRetorno("Duplicado com sucesso codlic:"+codLicNovo);
 		jdbcWrapper.closeSession();

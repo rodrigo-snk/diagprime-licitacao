@@ -60,7 +60,7 @@ public class AtualizaAcessorios implements EventoProgramavelJava {
         BigDecimal nuNota = licitacaoVO.asBigDecimalOrZero("NUNOTA");
         BigDecimal codEmp = licitacaoVO.asBigDecimalOrZero("CODEMP");
 
-        Acessorios.insereAcessorios(nuNota,codProd,qtdNeg, codVol, vlrUnit, vlrTot, codEmp, codLicCom,codLic, loteGrupo);
+        Acessorios.insereAcessorios(nuNota,codProd,qtdNeg, codVol, vlrUnit, vlrTot, codEmp, codLicCom,codLic, loteGrupo, licitacaoVO.asString("OBSERVACAOLOTE"));
 
     }
 

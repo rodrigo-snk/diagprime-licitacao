@@ -1,15 +1,22 @@
 package helpper;
 
 import java.math.BigDecimal;
+import java.math.MathContext;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 import br.com.sankhya.extensions.actionbutton.ContextoAcao;
 import br.com.sankhya.jape.EntityFacade;
 import br.com.sankhya.jape.dao.JdbcWrapper;
+import br.com.sankhya.jape.util.FinderWrapper;
 import br.com.sankhya.jape.vo.DynamicVO;
 import br.com.sankhya.jape.vo.EntityVO;
+import br.com.sankhya.modelcore.MGEModelException;
 import br.com.sankhya.modelcore.comercial.ComercialUtils;
+import br.com.sankhya.modelcore.comercial.util.TipoOperacaoUtils;
 import br.com.sankhya.modelcore.util.EntityFacadeFactory;
 import consultas.consultasEmpenho;
 
@@ -273,8 +280,106 @@ public class Empenho {
 		}
 		
 		jdbc.closeSession();
-		
-		
+	}
+
+	public static BigDecimal geraPedido(ContextoAcao arg0, BigDecimal codVend, DynamicVO contratoVO) throws Exception {
+		EntityFacade dwf = EntityFacadeFactory.getDWFFacade();
+		JdbcWrapper jdbcWrapper = dwf.getJdbcWrapper();
+		jdbcWrapper.openSession();
+
+		if (codVend == null) arg0.mostraErro("Vendedor não existe.");
+
+		String codTipOper = (String) arg0.getParam("TIPOPEDIDO");
+
+		Set<String> empenhos = new HashSet<>();
+		Set<String> tipo = new HashSet<>();
+		BigDecimal nuNota;
+		final BigDecimal numContrato = contratoVO.asBigDecimalOrZero("NUMCONTRATO");
+
+		Collection<DynamicVO> empenhosLiberados = dwf.findByDynamicFinderAsVO(new FinderWrapper("AD_CONVERTEREMPENHO", "this.QTDLIBERAR > 0 AND this.CODVEND = ? AND this.NUMCONTRATO = ?", new Object[] {codVend, numContrato}));
+		empenhosLiberados.forEach(vo -> empenhos.add(vo.asString("EMPENHO")));
+		empenhosLiberados.forEach(vo -> tipo.add(vo.asString("TIPO")));
+		if (empenhosLiberados.size() == 0) arg0.mostraErro("Não há empenhos para o vendedor selecionado.");
+		if (empenhos.size() > 1) arg0.mostraErro("Mais de um empenho selecionado para o mesmo pedido.");
+		if (tipo.size() > 1) arg0.mostraErro("Acessorios e itens nao podem estar no mesmo pedido.");
+
+		DynamicVO cabVO = CabecalhoNota.getOne("this.CODTIPOPER = 1005 AND this.NUMCONTRATO = ?", new Object[] {numContrato});
+		if (cabVO == null) throw new MGEModelException("Não foi encontrado nota do contrato.");
+
+		nuNota = Empenho.salvaCabecalhoNota(
+				dwf,
+				contratoVO.asBigDecimalOrZero("CODEMP"),
+				contratoVO.asBigDecimalOrZero("CODPARC"),
+				new BigDecimal(codTipOper),
+				contratoVO.asBigDecimalOrZero("CODTIPVENDA"),
+				contratoVO.asBigDecimalOrZero("CODNAT"),
+				contratoVO.asBigDecimalOrZero("CODCENCUS"),
+				contratoVO.asBigDecimalOrZero("CODPROJ"),
+				codVend,
+				BigDecimal.ZERO,
+				numContrato,
+				empenhos.stream().findFirst().get());
+
+
+		for (DynamicVO empenhoVO : empenhosLiberados) {
+
+			if (empenhoVO.asBigDecimalOrZero("QTDLIBERAR").compareTo(empenhoVO.asBigDecimalOrZero("QTDDISPONIVEL")) > 0) arg0.mostraErro("Quantidade digitada não pode ser maior que a disponivel ! Cód. Produto : " + empenhoVO.asBigDecimalOrZero("CODPROD"));
+
+			DynamicVO item = ItemNota.getOne("this.NUNOTA = ? AND CODPROD = ? AND CODVOL = ?",
+					new Object[] {cabVO.asBigDecimalOrZero("NUNOTA"), empenhoVO.asBigDecimalOrZero("CODPROD"), empenhoVO.asString("CODVOL")});
+
+
+			if (item != null) {
+
+				String codVol = empenhoVO.asString("CODVOL");
+				BigDecimal qtdLiberar = empenhoVO.asBigDecimalOrZero("QTDLIBERAR");
+				BigDecimal vlrUnit = item.asBigDecimalOrZero("VLRUNIT");
+				BigDecimal vlrTot = vlrUnit.multiply(qtdLiberar);
+
+				final String sqlunidade = "SELECT DIVIDEMULTIPLICA,MULTIPVLR,QUANTIDADE FROM TGFVOA WHERE CODPROD = " + empenhoVO.asBigDecimalOrZero("CODPROD").toString() + " and CODVOL = '" + codVol + "'";
+				PreparedStatement pstmt = jdbcWrapper.getPreparedStatement(sqlunidade);
+				ResultSet rs = pstmt.executeQuery();
+				if (rs.next()) {
+					final String divideOuMultiplica = rs.getString("DIVIDEMULTIPLICA");
+					BigDecimal quantidade = rs.getBigDecimal("QUANTIDADE").multiply(rs.getBigDecimal("MULTIPVLR"));
+
+					if (divideOuMultiplica.equalsIgnoreCase("M")) {
+						qtdLiberar = qtdLiberar.multiply(quantidade);
+						vlrUnit = vlrUnit.divide(quantidade, MathContext.DECIMAL128);
+
+					} else if (divideOuMultiplica.equalsIgnoreCase("D")) {
+						qtdLiberar = qtdLiberar.divide(quantidade, MathContext.DECIMAL128);
+						vlrUnit = vlrUnit.multiply(quantidade);
+					}
+					vlrTot = vlrUnit.multiply(qtdLiberar);
+				}
+
+				// Verifca ATUALEST da TOP para alterar itens
+				DynamicVO topVO = TipoOperacaoUtils.getTopVO(BigDecimal.valueOf(Integer.parseInt(codTipOper)));
+				String atualEst = (String) topVO.getProperty("ATUALEST");
+
+				Empenho.salvaItemNota(
+						dwf,
+						contratoVO.asBigDecimal("CODEMP"),
+						nuNota,
+						empenhoVO.asBigDecimalOrZero("CODPROD"),
+						qtdLiberar,
+						codVol,
+						vlrUnit,
+						vlrTot,
+						atualEst);
+			}
+
+			empenhoVO.setProperty("QTDLIBERAR", BigDecimal.ZERO);
+			empenhoVO.setProperty("QTDDISPONIVEL", empenhoVO.asBigDecimalOrZero("QTDDISPONIVEL").subtract(empenhoVO.asBigDecimalOrZero("QTDLIBERAR")));
+
+			dwf.saveEntity("AD_CONVERTEREMPENHO", (EntityVO) empenhoVO);
+
+
+		}
+
+		jdbcWrapper.closeSession();
+		return nuNota;
 	}
 
 }

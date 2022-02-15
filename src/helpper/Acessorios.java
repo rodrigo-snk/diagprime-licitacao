@@ -73,7 +73,8 @@ public class Acessorios {
             BigDecimal codEmp,
             BigDecimal codLicCom,
             BigDecimal codLic,
-            String loteGrupo) throws Exception {
+            String loteGrupo,
+            String observacaoLote) throws Exception {
 
         EntityFacade dwfFacade = EntityFacadeFactory.getDWFFacade();
         JdbcWrapper jdbc = dwfFacade.getJdbcWrapper();
@@ -111,10 +112,11 @@ public class Acessorios {
         itemVO.setUSOPROD("D");
         itemVO.setRESERVA("N");
         itemVO.setATUALESTOQUE(BigDecimal.ZERO);
-        itemVO.setProperty("AD_CODLICCOM", codLicCom);
-        itemVO.setProperty("AD_CODLIC", codLic);
-        itemVO.setProperty("AD_ACESSORIOS", "S");
-        itemVO.setProperty("AD_LOTEGRUPO", loteGrupo);
+        if (itemVO.containsProperty("AD_CODLICCOM")) itemVO.setProperty("AD_CODLICCOM", codLicCom);
+        if (itemVO.containsProperty("AD_CODLIC")) itemVO.setProperty("AD_CODLIC", codLic);
+        if (itemVO.containsProperty("AD_ACESSORIOS")) itemVO.setProperty("AD_ACESSORIOS", "S");
+        if (itemVO.containsProperty("AD_LOTEGRUPO")) itemVO.setProperty("AD_LOTEGRUPO", loteGrupo);
+        if (itemVO.containsProperty("AD_OBSLOTE")) itemVO.setProperty("AD_OBSLOTE", observacaoLote);
 
         Collection<ItemNotaVO> itens = new ArrayList<>();
         itens.add(itemVO);
